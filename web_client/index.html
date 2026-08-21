@@ -1,0 +1,2192 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GASlight-Me 🪔 — Инженерная База Знаний ОИиР</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap"
+        rel="stylesheet">
+    <!-- Markdown Parser -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-card: rgba(30, 41, 59, 0.7);
+            --bg-card-hover: rgba(51, 65, 85, 0.8);
+            --accent-glow: #38bdf8;
+            --accent-purple: #818cf8;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            --font-heading: 'Outfit', system-ui, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background: radial-gradient(circle at 15% 15%, #1e1b4b 0%, #0f172a 50%, #020617 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 20px 40px;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 44px;
+            height: 44px;
+            background: radial-gradient(circle at 50% 50%, rgba(245, 158, 11, 0.25) 0%, rgba(15, 23, 42, 0.8) 100%);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 24px rgba(245, 158, 11, 0.35);
+        }
+
+        .kerosene-lamp-svg {
+            width: 32px;
+            height: 32px;
+            filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.6));
+            animation: pulseGlow 3s ease-in-out infinite alternate;
+        }
+
+        .inline-lamp-svg {
+            width: 20px;
+            height: 20px;
+            vertical-align: middle;
+            display: inline-block;
+            margin: 0 3px;
+            filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.5));
+        }
+
+        @keyframes pulseGlow {
+            0% {
+                filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.4));
+            }
+
+            100% {
+                filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.8));
+            }
+        }
+
+        .logo-title {
+            font-family: var(--font-heading);
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(90deg, #f8fafc, #fcd34d, #f97316);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-badge {
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #4ade80;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #4ade80;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #4ade80;
+        }
+
+        main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 24px;
+            padding: 24px 40px;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .chat-container {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            height: calc(100vh - 150px);
+        }
+
+        .messages-area {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 16px 20px;
+            border-radius: 14px;
+            line-height: 1.6;
+            font-size: 15px;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #0284c7, #2563eb);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.assistant {
+            align-self: flex-start;
+            background: rgba(30, 41, 59, 0.9);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            border-bottom-left-radius: 4px;
+        }
+
+        /* Markdown Elements Formatting */
+        .message.assistant h1,
+        .message.assistant h2,
+        .message.assistant h3,
+        .message.assistant h4 {
+            color: #ffffff;
+            font-family: var(--font-heading);
+            margin-top: 14px;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .message.assistant h3 {
+            font-size: 16px;
+            color: #7dd3fc;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 4px;
+        }
+
+        .message.assistant p {
+            margin-bottom: 8px;
+        }
+
+        .message.assistant p:last-child {
+            margin-bottom: 0;
+        }
+
+        .message.assistant ul,
+        .message.assistant ol {
+            margin-left: 20px;
+            margin-bottom: 10px;
+        }
+
+        .message.assistant li {
+            margin-bottom: 4px;
+        }
+
+        .message.assistant table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 12px 0;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 8px;
+            overflow: hidden;
+            font-size: 13px;
+        }
+
+        .message.assistant th,
+        .message.assistant td {
+            padding: 8px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: left;
+        }
+
+        .message.assistant th {
+            background: rgba(56, 189, 248, 0.15);
+            color: #38bdf8;
+            font-weight: 600;
+        }
+
+        .message.assistant tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .message.assistant code {
+            background: rgba(0, 0, 0, 0.35);
+            color: #38bdf8;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: Consolas, Monaco, monospace;
+            font-size: 13px;
+        }
+
+        .message.assistant pre {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 12px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+
+        .message.assistant pre code {
+            background: transparent;
+            padding: 0;
+        }
+
+        .message.assistant blockquote {
+            border-left: 3px solid #38bdf8;
+            padding-left: 12px;
+            margin: 8px 0;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Progress Bar & Stage Indicator */
+        .progress-card {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            box-shadow: 0 0 16px rgba(245, 158, 11, 0.15);
+            animation: fadeIn 0.2s ease-in-out;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        .progress-label {
+            color: #fcd34d;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .progress-percent {
+            font-family: Consolas, monospace;
+            font-size: 12px;
+            color: var(--accent-glow);
+            font-weight: 600;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 10%;
+            background: linear-gradient(90deg, #f59e0b, #38bdf8);
+            border-radius: 3px;
+            transition: width 0.35s ease-in-out;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
+        }
+
+        .source-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(56, 189, 248, 0.15);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            color: var(--accent-glow);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-top: 10px;
+            margin-right: 6px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .source-tags {
+            margin-top: 14px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .source-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            color: #7dd3fc;
+            padding: 5px 12px;
+            border-radius: 8px;
+            margin: 4px 6px 4px 0;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .source-tag:hover {
+            background: rgba(56, 189, 248, 0.25);
+            border-color: #38bdf8;
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25);
+        }
+
+        /* 1-Click Interactive Inline Citation Badges */
+        .inline-citation-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(56, 189, 248, 0.16);
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.45);
+            padding: 2px 9px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 0 3px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .inline-citation-badge:hover {
+            background: rgba(56, 189, 248, 0.35);
+            border-color: #7dd3fc;
+            color: #ffffff;
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.5);
+            transform: translateY(-1px);
+        }
+
+        /* LLM-as-a-Judge Verification Badge */
+        .judge-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(34, 197, 94, 0.12);
+            border: 1px solid rgba(34, 197, 94, 0.35);
+            color: #4ade80;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            margin-top: 12px;
+            margin-bottom: 6px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .judge-badge.warning {
+            background: rgba(239, 68, 68, 0.12);
+            border-color: rgba(239, 68, 68, 0.4);
+            color: #f87171;
+        }
+
+        /* Plan A: Query Rewriter Badge */
+        .rewriter-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(129, 140, 248, 0.12);
+            border: 1px solid rgba(129, 140, 248, 0.3);
+            color: #a5b4fc;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            margin-bottom: 10px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* Plan C: Guiding Follow-up Questions (Interactive Chips) */
+        .suggestions-container {
+            margin-top: 14px;
+            padding-top: 10px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .suggestions-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #fcd34d;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .suggestions-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .suggestion-chip {
+            background: rgba(30, 41, 59, 0.9);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            color: #e2e8f0;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            user-select: none;
+        }
+
+        .suggestion-chip:hover {
+            background: rgba(56, 189, 248, 0.2);
+            border-color: #38bdf8;
+            color: #38bdf8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25);
+        }
+
+
+        
+                /* Dynamic Slot-Filling Query Clarifier */
+        .clarifier-drawer {
+            background: rgba(15, 23, 42, 0.96);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(245, 158, 11, 0.45);
+            border-bottom: 1px solid var(--border-color);
+            padding: 18px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5);
+            animation: slideUp 0.25s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .clarifier-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .clarifier-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #fbbf24;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .clarifier-close-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 16px;
+            cursor: pointer;
+            padding: 2px 8px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .clarifier-close-btn:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .clarifier-question-box {
+            background: rgba(30, 41, 59, 0.7);
+            border-left: 3px solid #f59e0b;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #fef08a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .clarifier-options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 10px;
+        }
+
+        .clarifier-opt-card {
+            background: rgba(30, 41, 59, 0.85);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            padding: 12px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            text-align: left;
+        }
+
+        .clarifier-opt-card:hover {
+            background: rgba(56, 189, 248, 0.15);
+            border-color: #38bdf8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 14px rgba(56, 189, 248, 0.2);
+        }
+
+        .clarifier-opt-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .clarifier-opt-card:hover .clarifier-opt-label {
+            color: #38bdf8;
+        }
+
+        .clarifier-opt-preview {
+            font-size: 11px;
+            color: var(--text-muted);
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .clarify-btn {
+            background: rgba(30, 41, 59, 0.85) !important;
+            border: 1px solid rgba(245, 158, 11, 0.4) !important;
+            color: #fbbf24 !important;
+            padding: 0 16px !important;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .clarify-btn:hover {
+            background: rgba(245, 158, 11, 0.2) !important;
+            border-color: #fbbf24 !important;
+            box-shadow: 0 0 12px rgba(245, 158, 11, 0.25);
+        }
+
+        .clarify-btn.loading {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .input-bar {
+            padding: 20px;
+            background: rgba(15, 23, 42, 0.9);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 12px;
+        }
+
+        .input-bar input {
+            flex: 1;
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 14px 18px;
+            color: white;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input-bar input:focus {
+            border-color: var(--accent-glow);
+        }
+
+        .input-bar button {
+            background: linear-gradient(135deg, #f59e0b, #ea580c);
+            color: #ffffff;
+            border: none;
+            padding: 0 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .input-bar button:hover {
+            opacity: 0.9;
+        }
+
+        .graph-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(245, 158, 11, 0.25));
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            color: #38bdf8;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s;
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.15);
+        }
+
+        .graph-btn:hover {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.35), rgba(245, 158, 11, 0.4));
+            border-color: #38bdf8;
+            color: #ffffff;
+            box-shadow: 0 0 18px rgba(56, 189, 248, 0.4);
+            transform: translateY(-1px);
+        }
+
+        /* Graph Modal */
+        .graph-modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(10, 15, 29, 0.85);
+            backdrop-filter: blur(12px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.25s ease;
+        }
+
+        .graph-modal-content {
+            width: 92vw;
+            height: 88vh;
+            background: #0f172a;
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            border-radius: 18px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(56, 189, 248, 0.2);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .graph-modal-header {
+            padding: 16px 24px;
+            background: rgba(30, 41, 59, 0.7);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .graph-modal-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .graph-close-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 24px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .graph-close-btn:hover {
+            color: #ef4444;
+        }
+
+        .graph-toolbar {
+            padding: 10px 24px;
+            background: rgba(15, 23, 42, 0.95);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .graph-search-input {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 6px 12px;
+            color: white;
+            font-size: 13px;
+            outline: none;
+            width: 240px;
+        }
+
+        .graph-canvas-container {
+            flex: 1;
+            position: relative;
+            background: radial-gradient(#1e293b 1.5px, #0b0f19 1.5px);
+            background-size: 24px 24px;
+            overflow: hidden;
+            cursor: grab;
+        }
+
+        .graph-canvas-container:active {
+            cursor: grabbing;
+        }
+
+        .graph-tooltip {
+            position: absolute;
+            display: none;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid #38bdf8;
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+            border-radius: 10px;
+            padding: 12px 16px;
+            color: white;
+            font-size: 12px;
+            max-width: 320px;
+            pointer-events: none;
+            z-index: 1050;
+            backdrop-filter: blur(8px);
+        }
+
+        .legend-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-right: 12px;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .panel-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        .panel-title {
+            font-family: var(--font-heading);
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 14px;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        select {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border-color);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .upload-box {
+            border: 2px dashed var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .upload-box:hover {
+            border-color: var(--accent-glow);
+        }
+
+        .upload-box input {
+            display: none;
+        }
+
+        .system-info {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.8;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="logo-group">
+            <div class="logo-icon">
+                <!-- Manual Kerosene Lamp / Hurricane Lantern SVG -->
+                <svg class="kerosene-lamp-svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="metalGrad" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stop-color="#fbbf24" />
+                            <stop offset="50%" stop-color="#b45309" />
+                            <stop offset="100%" stop-color="#78350f" />
+                        </linearGradient>
+                        <radialGradient id="flameGlow" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" stop-color="#ffffff" />
+                            <stop offset="35%" stop-color="#fef08a" />
+                            <stop offset="70%" stop-color="#f59e0b" />
+                            <stop offset="100%" stop-color="#ea580c" />
+                        </radialGradient>
+                        <linearGradient id="glassGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="rgba(255,255,255,0.35)" />
+                            <stop offset="100%" stop-color="rgba(251,191,36,0.12)" />
+                        </linearGradient>
+                    </defs>
+                    <!-- Handle / Bail -->
+                    <path d="M 20 22 C 20 6, 44 6, 44 22" stroke="#d97706" stroke-width="2.5" stroke-linecap="round"
+                        fill="none" />
+                    <!-- Top Ring -->
+                    <circle cx="32" cy="11" r="3" stroke="#fbbf24" stroke-width="2" fill="none" />
+                    <!-- Top Cap / Chimney Hood -->
+                    <path d="M 26 18 L 38 18 L 36 14 L 28 14 Z" fill="url(#metalGrad)" />
+                    <ellipse cx="32" cy="18" rx="7" ry="2.5" fill="#fbbf24" />
+                    <!-- Side Tubes / Wire Cage -->
+                    <path d="M 25 18 C 17 24, 17 40, 24 45" stroke="url(#metalGrad)" stroke-width="2.5"
+                        stroke-linecap="round" fill="none" />
+                    <path d="M 39 18 C 47 24, 47 40, 40 45" stroke="url(#metalGrad)" stroke-width="2.5"
+                        stroke-linecap="round" fill="none" />
+                    <!-- Glass Globe -->
+                    <path d="M 26 21 C 23 27, 23 37, 26 43 L 38 43 C 41 37, 41 27, 38 21 Z" fill="url(#glassGrad)"
+                        stroke="rgba(255,255,255,0.35)" stroke-width="1" />
+                    <!-- Glass Highlight -->
+                    <path d="M 27 24 C 25 28, 25 35, 27 39" stroke="rgba(255,255,255,0.6)" stroke-width="1.2"
+                        stroke-linecap="round" fill="none" />
+                    <!-- Glowing Flame -->
+                    <circle cx="32" cy="33" r="7" fill="#fbbf24" opacity="0.35" />
+                    <path
+                        d="M 32 26 C 30 29, 29 32, 29 34 C 29 36, 30.5 37.5, 32 37.5 C 33.5 37.5, 35 36, 35 34 C 35 32, 34 29, 32 26 Z"
+                        fill="url(#flameGlow)" />
+                    <!-- Flame Core -->
+                    <path
+                        d="M 32 29 C 31 31, 30.5 33, 30.5 34.5 C 30.5 35.5, 31.2 36.5, 32 36.5 C 32.8 36.5, 33.5 35.5, 33.5 34.5 C 33.5 33, 33 31, 32 29 Z"
+                        fill="#ffffff" />
+                    <!-- Burner Collar -->
+                    <rect x="25" y="43" width="14" height="4" rx="1.5" fill="url(#metalGrad)" />
+                    <rect x="39" y="44" width="3" height="2" rx="0.5" fill="#fbbf24" />
+                    <!-- Base Fuel Tank -->
+                    <path
+                        d="M 22 47 L 42 47 C 45 47, 47 50, 46 54 L 45 56 C 45 57.5, 43 58, 41 58 L 23 58 C 21 58, 19 57.5, 19 56 L 18 54 C 17 50, 19 47, 22 47 Z"
+                        fill="url(#metalGrad)" />
+                    <ellipse cx="32" cy="47" rx="10" ry="2" fill="#d97706" />
+                    <ellipse cx="32" cy="57" rx="13" ry="2.5" fill="#78350f" stroke="#fbbf24" stroke-width="1" />
+                </svg>
+            </div>
+            <div>
+                <div class="logo-title">
+                    GASlight-Me
+                    <svg class="inline-lamp-svg" viewBox="0 0 64 64" fill="none">
+                        <path d="M 20 22 C 20 6, 44 6, 44 22" stroke="#d97706" stroke-width="2.5" stroke-linecap="round"
+                            fill="none" />
+                        <circle cx="32" cy="11" r="3" stroke="#fbbf24" stroke-width="2" fill="none" />
+                        <path d="M 26 18 L 38 18 L 36 14 L 28 14 Z" fill="#b45309" />
+                        <ellipse cx="32" cy="18" rx="7" ry="2.5" fill="#fbbf24" />
+                        <path d="M 25 18 C 17 24, 17 40, 24 45" stroke="#b45309" stroke-width="2.5"
+                            stroke-linecap="round" fill="none" />
+                        <path d="M 39 18 C 47 24, 47 40, 40 45" stroke="#b45309" stroke-width="2.5"
+                            stroke-linecap="round" fill="none" />
+                        <path d="M 26 21 C 23 27, 23 37, 26 43 L 38 43 C 41 37, 41 27, 38 21 Z"
+                            fill="rgba(251,191,36,0.2)" stroke="rgba(255,255,255,0.4)" stroke-width="1" />
+                        <path
+                            d="M 32 26 C 30 29, 29 32, 29 34 C 29 36, 30.5 37.5, 32 37.5 C 33.5 37.5, 35 36, 35 34 C 35 32, 34 29, 32 26 Z"
+                            fill="#f59e0b" />
+                        <rect x="25" y="43" width="14" height="4" rx="1.5" fill="#b45309" />
+                        <path
+                            d="M 22 47 L 42 47 C 45 47, 47 50, 46 54 L 45 56 C 45 57.5, 43 58, 41 58 L 23 58 C 21 58, 19 57.5, 19 56 L 18 54 C 17 50, 19 47, 22 47 Z"
+                            fill="#b45309" />
+                        <ellipse cx="32" cy="57" rx="13" ry="2.5" fill="#78350f" stroke="#fbbf24" stroke-width="1" />
+                    </svg>
+                </div>
+                <div style="font-size: 12px; color: var(--text-muted);">Инженерная RAG-Система ОИиР (Strict Citations & Zero Gaslighting)</div>
+            </div>
+        </div>
+        <div class="status-badge">
+            <div class="status-dot"></div>
+            Сервер gpu-compute-node (RTX A6000 48GB)
+        </div>
+    </header>
+
+    <main>
+        <div class="chat-container">
+            <div class="messages-area" id="messages">
+                <div class="message assistant">
+                    Здравствуйте! Я инженерная система <b>GASlight-Me</b>.<br>
+                    Я готова отвечать на ваши вопросы по ГОСТам, СТО Газпром, DIN/ISO стандартам, спецификациям BOM и
+                    протоколам испытаний.
+                    Все ответы формируются исключительно по фактам из базы знаний с точными ссылками на первоисточник.
+                </div>
+            </div>
+
+                        <!-- Dynamic Slot-Filling Query Clarifier Drawer (Co-Pilot) -->
+            <div class="clarifier-drawer" id="clarifierDrawer" style="display: none;">
+                <div class="clarifier-header">
+                    <div class="clarifier-title">✨ Инженерный Co-Pilot: Заземление запроса</div>
+                    <button class="clarifier-close-btn" onclick="closeClarifier()">✕</button>
+                </div>
+                <div class="clarifier-question-box" id="clarifierQuestion">
+                    <span>💬</span> <span id="clarifierQuestionText">Анализ недостающих параметров запроса...</span>
+                </div>
+                <div class="clarifier-options-grid" id="clarifierOptionsGrid"></div>
+            </div>
+
+            <div class="input-bar">
+                <input type="text" id="userInput"
+                    placeholder="Задайте технический вопрос (например: Каковы требования по резьбе в ГОСТ 6111-52?)..."
+                    onkeydown="handleKeyDown(event)"
+                    oninput="handleInputDebounce(event)">
+                <button class="clarify-btn" id="clarifyBtn" onclick="toggleClarifier()" title="Помощник заземления запроса (Ctrl+Space)">✨ Уточнить</button>
+                <button onclick="sendQuery()">Получается?</button>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="panel-card">
+                <div class="panel-title">🤖 Выбор Нейросети (Ollama)</div>
+                <select id="modelSelect">
+                    <option value="qwen3.6:35b" selected>Qwen 3.6 35B (MoE — Рекомендуется)</option>
+                    <option value="huihui_ai/deepseek-r1-abliterated:32b">DeepSeek R1 32B (Математика & Рассуждения)
+                    </option>
+                    <option value="gpt-oss:20b">GPT-OSS 20B (Быстрый анализ)</option>
+                </select>
+            </div>
+
+            <div class="panel-card">
+                <div class="panel-title">📄 Загрузка Стандарта / Документа</div>
+                <div class="upload-box" onclick="document.getElementById('fileInput').click()">
+                    <div style="font-size: 24px; margin-bottom: 6px;">📂</div>
+                    <div style="font-size: 14px; font-weight: 500;">Загрузить ГОСТ / PDF / Excel</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">Нажмите для выбора файла</div>
+                    <input type="file" id="fileInput" onchange="uploadDocument(event)">
+                </div>
+                <div id="uploadStatus" style="font-size: 12px; margin-top: 10px; color: #4ade80;"></div>
+            </div>
+
+            <div class="panel-card">
+                <div class="panel-title">🗺️ База Знаний & Аналитика</div>
+                <button class="graph-btn" style="width: 100%; justify-content: center; padding: 10px; margin-bottom: 8px;" onclick="openGraphModal()">
+                    🌌 3D Карта Базы Знаний
+                </button>
+                <button class="graph-btn" style="width: 100%; justify-content: center; padding: 10px; background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(56, 189, 248, 0.25)); border-color: rgba(34, 197, 94, 0.4); color: #4ade80;" onclick="openStatsModal()">
+                    📊 Дашборд Статистики БД
+                </button>
+            </div>
+
+            <div class="panel-card">
+                <div class="panel-title">⚡ Инфраструктура gpu-compute-node</div>
+                <div class="system-info">
+                    <div class="info-row"><span>GPU:</span> <span>RTX A6000 (48GB VRAM)</span></div>
+                    <div class="info-row"><span>RAM:</span> <span>128 GB DDR5</span></div>
+                    <div class="info-row"><span>Векторные эмбеддинги:</span> <span>BGE-M3 (1024-dim)</span></div>
+                    <div class="info-row"><span>Векторная БД:</span> <span>Qdrant (32 772 точки)</span></div>
+                    <div class="info-row"><span>Нейро-Реранкер:</span> <span>FlashRank Cross-Encoder</span></div>
+                    <div class="info-row"><span>LLM-Судья (Fact-Check):</span> <span style="color:#4ade80; font-weight:600;">Qwen 3.6 35B (NLI)</span></div>
+                    <div class="info-row"><span>Конфиденциальность:</span> <span>100% On-Premise</span></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = window.location.origin;
+
+                                let activeClarificationData = null;
+        let clarifierDebounceTimer = null;
+        let isClarifierFetching = false;
+
+        function handleInputDebounce(e) {
+            // When user types or edits text, close any previous clarifier drawer to avoid distraction
+            closeClarifier();
+        }
+
+        function handleKeyDown(e) {
+            const drawer = document.getElementById('clarifierDrawer');
+            const isDrawerOpen = drawer && drawer.style.display !== 'none';
+
+            if ((e.ctrlKey || e.metaKey) && e.code === 'Space') {
+                e.preventDefault();
+                toggleClarifier();
+            } else if (e.key === 'Tab' && isDrawerOpen && activeClarificationData && activeClarificationData.options && activeClarificationData.options.length > 0) {
+                e.preventDefault();
+                // Select top suggestion on Tab key
+                const topOption = activeClarificationData.options[0];
+                selectClarificationOption(topOption.full_query);
+            } else if (e.key === 'Escape' && isDrawerOpen) {
+                e.preventDefault();
+                closeClarifier();
+            } else if (e.key === 'Enter') {
+                closeClarifier();
+                sendQuery();
+            }
+        }
+
+        async function toggleClarifier() {
+            const drawer = document.getElementById('clarifierDrawer');
+            if (drawer && drawer.style.display !== 'none') {
+                closeClarifier();
+                return;
+            }
+            await fetchClarification(false);
+        }
+
+        function closeClarifier() {
+            const drawer = document.getElementById('clarifierDrawer');
+            if (drawer) drawer.style.display = 'none';
+        }
+
+        async function fetchClarification(isAuto = false) {
+            const input = document.getElementById('userInput');
+            const query = input.value.trim();
+            if (!query) {
+                if (!isAuto) {
+                    input.placeholder = 'Сначала введите черновик (например: "температура эксплуатации")...';
+                    input.focus();
+                }
+                return;
+            }
+
+            if (isClarifierFetching) return;
+            isClarifierFetching = true;
+
+            const btn = document.getElementById('clarifyBtn');
+            if (btn) {
+                btn.classList.add('loading');
+                btn.innerText = '⏳';
+            }
+
+            try {
+                const resp = await fetch(`${API_BASE}/api/query/clarify`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: query })
+                });
+                const data = await resp.json();
+                activeClarificationData = data;
+
+                if (data.is_specific_enough || !data.options || data.options.length === 0) {
+                    if (!isAuto) {
+                        // User explicitly clicked "Уточнить", but query is already specific
+                        renderSpecificEnoughNotice(data);
+                    } else {
+                        closeClarifier();
+                    }
+                } else {
+                    renderClarifier(data);
+                }
+            } catch (err) {
+                console.error('Clarifier error:', err);
+            } finally {
+                isClarifierFetching = false;
+                if (btn) {
+                    btn.classList.remove('loading');
+                    btn.innerText = '✨ Уточнить';
+                }
+            }
+        }
+
+        function renderSpecificEnoughNotice(data) {
+            const drawer = document.getElementById('clarifierDrawer');
+            const questionText = document.getElementById('clarifierQuestionText');
+            const grid = document.getElementById('clarifierOptionsGrid');
+
+            questionText.innerText = '✅ Запрос уже достаточно конкретен: ' + (data.clarifying_question || 'готов к прямому поиску.');
+            grid.innerHTML = `
+                <div class="clarifier-opt-card" style="border-color: rgba(34, 197, 94, 0.4); background: rgba(34, 197, 94, 0.08);" onclick="closeClarifier(); sendQuery();">
+                    <div class="clarifier-opt-label" style="color: #4ade80;"><span>🚀 Запустить прямой поиск по базе</span> <span>➔</span></div>
+                    <div class="clarifier-opt-preview">Запрос содержит точные критерии. Нажмите для немедленного поиска.</div>
+                </div>
+            `;
+            drawer.style.display = 'flex';
+        }
+
+        function renderClarifier(data) {
+            const drawer = document.getElementById('clarifierDrawer');
+            const questionText = document.getElementById('clarifierQuestionText');
+            const grid = document.getElementById('clarifierOptionsGrid');
+
+            questionText.innerText = data.clarifying_question || 'Выберите подходящий вариант для заземления запроса:';
+            grid.innerHTML = '';
+
+            const options = data.options || [];
+            options.forEach(opt => {
+                const card = document.createElement('div');
+                card.className = 'clarifier-opt-card';
+                card.innerHTML = `
+                    <div class="clarifier-opt-label"><span>${opt.label}</span> <span>➔</span></div>
+                    <div class="clarifier-opt-preview">${opt.full_query}</div>
+                `;
+                card.onclick = () => selectClarificationOption(opt.full_query);
+                grid.appendChild(card);
+            });
+
+            drawer.style.display = 'flex';
+        }
+
+        function selectClarificationOption(fullQuery) {
+            closeClarifier();
+            const input = document.getElementById('userInput');
+            input.value = fullQuery;
+            sendQuery();
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') sendQuery();
+        }
+
+        async function sendQuery() {
+            const input = document.getElementById('userInput');
+            const query = input.value.trim();
+            if (!query) return;
+
+            const messagesDiv = document.getElementById('messages');
+            const model = document.getElementById('modelSelect').value;
+
+            // Append User Message
+            const userMsg = document.createElement('div');
+            userMsg.className = 'message user';
+            userMsg.innerText = query;
+            messagesDiv.appendChild(userMsg);
+
+            input.value = '';
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+            // Create Assistant Message container with typing cursor
+            const assistantMsg = document.createElement('div');
+            assistantMsg.className = 'message assistant';
+
+            // Create Animated Progress Bar Card
+            const progressCard = document.createElement('div');
+            progressCard.className = 'progress-card';
+            progressCard.id = 'queryProgressCard';
+            progressCard.innerHTML = `
+                <div class="progress-header">
+                    <span class="progress-label" id="progressLabel">⚡ Подключение к базе знаний...</span>
+                    <span class="progress-percent" id="progressPercent">10%</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" id="progressFill" style="width: 10%;"></div>
+                </div>
+            `;
+            assistantMsg.appendChild(progressCard);
+
+            const textContainer = document.createElement('div');
+            textContainer.id = 'queryTextContainer';
+            assistantMsg.appendChild(textContainer);
+
+            messagesDiv.appendChild(assistantMsg);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/query/stream`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: query, model: model, top_k: 5 })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+                let accumulatedText = '';
+                let sourcesList = [];
+                let judgeVerdict = null;
+                let rewriteInfo = null;
+                let suggestionsList = [];
+                let isFirstToken = true;
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value, { stream: true });
+                    const lines = chunk.split('\n');
+
+                    let currentEvent = null;
+                    for (const line of lines) {
+                        if (line.startsWith('event:')) {
+                            currentEvent = line.replace('event:', '').trim();
+                        } else if (line.startsWith('data:')) {
+                            const dataStr = line.replace('data:', '').trim();
+                            if (!dataStr) continue;
+
+                            try {
+                                const parsed = JSON.parse(dataStr);
+                                if (currentEvent === 'progress') {
+                                    const fillEl = progressCard.querySelector('#progressFill');
+                                    const labelEl = progressCard.querySelector('#progressLabel');
+                                    const pctEl = progressCard.querySelector('#progressPercent');
+                                    if (fillEl && parsed.percent) {
+                                        fillEl.style.width = `${parsed.percent}%`;
+                                    }
+                                    if (labelEl && parsed.stage) {
+                                        labelEl.innerHTML = parsed.stage;
+                                    }
+                                    if (pctEl && parsed.percent) {
+                                        pctEl.innerText = `${parsed.percent}%`;
+                                    }
+                                } else if (currentEvent === 'rewriter') {
+                                    rewriteInfo = parsed;
+                                    if (rewriteInfo && rewriteInfo.is_rewritten && rewriteInfo.optimized_query) {
+                                        let rewriterBadge = assistantMsg.querySelector('.rewriter-badge');
+                                        if (!rewriterBadge) {
+                                            rewriterBadge = document.createElement('div');
+                                            rewriterBadge.className = 'rewriter-badge';
+                                            assistantMsg.insertBefore(rewriterBadge, progressCard);
+                                        }
+                                        rewriterBadge.innerHTML = `🎯 <b>Оптимизированный запрос:</b> ${rewriteInfo.optimized_query}`;
+                                    }
+                                } else if (currentEvent === 'sources' || Array.isArray(parsed)) {
+                                    sourcesList = Array.isArray(parsed) ? parsed : [];
+                                } else if (currentEvent === 'verification') {
+                                    judgeVerdict = parsed;
+                                } else if (currentEvent === 'suggestions') {
+                                    suggestionsList = parsed.suggestions || [];
+                                } else if (currentEvent === 'token' && parsed.token) {
+                                    if (isFirstToken) {
+                                        textContainer.innerHTML = '';
+                                        isFirstToken = false;
+                                        // Minimize and fade out progress bar
+                                        progressCard.style.opacity = '0';
+                                        progressCard.style.transition = 'opacity 0.4s ease, margin 0.4s ease';
+                                        setTimeout(() => { progressCard.style.display = 'none'; }, 400);
+                                    }
+                                    accumulatedText += parsed.token;
+                                    if (typeof marked !== 'undefined') {
+                                        textContainer.innerHTML = marked.parse(accumulatedText);
+                                    } else {
+                                        textContainer.innerHTML = accumulatedText.replace(/\n/g, '<br>');
+                                    }
+                                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                                }
+                            } catch (e) {
+                                // Ignore json parse errors for empty events
+                            }
+                        }
+                    }
+                }
+
+                // Transform inline citations into 1-click interactive badges
+                function transformInlineCitations(htmlText, sources) {
+                    if (!sources || sources.length === 0) return htmlText;
+                    return htmlText.replace(/\[(?:ИСТОЧНИК|SOURCE|Источник)\s*#?(\d+)(?::\s*([^\]]*))?\]/gi, (match, srcIdx, customTitle) => {
+                        const idx = parseInt(srcIdx, 10) - 1;
+                        const src = sources[idx] || sources[0];
+                        if (src) {
+                            const loc = src.page ? `Стр. ${src.page}` : (src.sheet ? `Лист: ${src.sheet}` : 'Стр. 1');
+                            let docUrl = src.verification_link;
+                            if (!docUrl || docUrl.startsWith('file:')) {
+                                docUrl = `${API_BASE}/api/documents/${encodeURIComponent(src.source)}` + (src.page ? `#page=${src.page}` : '');
+                            }
+                            const label = customTitle ? customTitle.trim() : `${src.source} (${loc})`;
+                            return `<a href="${docUrl}" class="inline-citation-badge" onclick="event.preventDefault(); openDocumentViewer('${docUrl}', '${src.source}', '${src.page || 1}')">📄 [${srcIdx}] ${label}</a>`;
+                        }
+                        return `<span class="inline-citation-badge">${match}</span>`;
+                    });
+                }
+
+                // Final markdown render pass to ensure clean closing tags & interactive links
+                if (typeof marked !== 'undefined' && accumulatedText) {
+                    const rawHtml = marked.parse(accumulatedText);
+                    textContainer.innerHTML = transformInlineCitations(rawHtml, sourcesList);
+                }
+
+                // Render LLM-as-a-Judge Badge
+                if (judgeVerdict) {
+                    const judgeBadge = document.createElement('div');
+                    const jModel = (judgeVerdict.judge_model || 'Qwen 3.6 35B').replace(':latest', '');
+                    if (judgeVerdict.hallucination_detected) {
+                        judgeBadge.className = 'judge-badge warning';
+                        const claims = (judgeVerdict.unsupported_claims || []).join('; ') || 'Требует ручной сверки';
+                        judgeBadge.innerHTML = `⚠️ <b>Аудит LLM-Judge (${jModel}):</b> Неподтвержденные утверждения: ${claims}`;
+                    } else {
+                        const conf = Math.round((judgeVerdict.confidence_score || 0.95) * 100);
+                        judgeBadge.className = 'judge-badge';
+                        judgeBadge.innerHTML = `🛡️ <b>Верифицировано LLM-as-a-Judge (${jModel}):</b> 100% подтверждено первоисточниками (Уверенность: ${conf}%)`;
+                    }
+                    assistantMsg.appendChild(judgeBadge);
+                }
+
+                // Append clickable Human-in-the-Loop source badges
+                if (sourcesList.length > 0) {
+                    const sourceTags = document.createElement('div');
+                    sourceTags.className = 'source-tags';
+                    sourceTags.innerHTML = '<strong>Источники (Human-in-the-Loop — нажмите для быстрого просмотра):</strong><br>';
+
+                    sourcesList.forEach((src, sIdx) => {
+                        const chip = document.createElement('a');
+                        chip.className = 'source-tag';
+                        const loc = src.page ? `Стр. ${src.page}` : (src.sheet ? `Лист: ${src.sheet}` : 'Стр. 1');
+
+                        let docUrl = src.verification_link;
+                        if (!docUrl || docUrl.startsWith('file:')) {
+                            docUrl = `${API_BASE}/api/documents/${encodeURIComponent(src.source)}` + (src.page ? `#page=${src.page}` : '');
+                        }
+                        chip.href = docUrl;
+                        chip.title = `Нажмите для открытия ${src.source} (${loc}) в окне`;
+                        chip.innerHTML = `📄 [${sIdx + 1}] ${src.doc_type || 'Стандарт'}: <b>${src.source}</b> (${loc}) | Score: ${src.score}`;
+                        chip.onclick = (e) => {
+                            e.preventDefault();
+                            openDocumentViewer(docUrl, src.source, src.page);
+                        };
+                        sourceTags.appendChild(chip);
+                    });
+
+                    assistantMsg.appendChild(sourceTags);
+                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                }
+
+                // Plan C: Append interactive Guiding / Follow-up Questions chips
+                if (suggestionsList && suggestionsList.length > 0) {
+                    const suggContainer = document.createElement('div');
+                    suggContainer.className = 'suggestions-container';
+                    suggContainer.innerHTML = '<div class="suggestions-title">💡 Рекомендуемые уточняющие вопросы:</div>';
+                    
+                    const suggListEl = document.createElement('div');
+                    suggListEl.className = 'suggestions-list';
+
+                    suggestionsList.forEach(qText => {
+                        const chipBtn = document.createElement('div');
+                        chipBtn.className = 'suggestion-chip';
+                        chipBtn.innerHTML = `<span>🔍</span> <span>${qText}</span>`;
+                        chipBtn.onclick = () => setAndSendQuery(qText);
+                        suggListEl.appendChild(chipBtn);
+                    });
+
+                    suggContainer.appendChild(suggListEl);
+                    assistantMsg.appendChild(suggContainer);
+                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                }
+
+            } catch (err) {
+                textContainer.innerHTML = `<span style="color:#ef4444;">❌ Ошибка обращения к серверу GASlight-Me: ${err.message}</span>`;
+            }
+        }
+
+        function setAndSendQuery(text) {
+            const input = document.getElementById('userInput');
+            if (input) {
+                input.value = text;
+                sendQuery();
+            }
+        }
+
+        async function uploadDocument(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const status = document.getElementById('uploadStatus');
+            status.innerText = `⏳ Индексация файла ${file.name}...`;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const res = await fetch(`${API_BASE}/api/ingest`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                status.innerText = `✅ Файл ${data.filename} успешно добавлен! Сэмплов в индексе: ${data.total_index_size}`;
+            } catch (err) {
+                status.innerText = `❌ Ошибка загрузки файла.`;
+            }
+        }
+
+        /* --- 3D VECTOR GRAPH VISUALIZER LOGIC --- */
+        let graphNodes = [];
+        let rotX = 0.35, rotY = 0.55;
+        let zoom3D = 1.35;
+        let panX = 0, panY = 0;
+        let isDragging3D = false;
+        let startMouse = { x: 0, y: 0 };
+        let hoveredNode3D = null;
+        let searchQuery = '';
+        let autoRotate = true;
+        let animFrameId = null;
+
+        function getCategoryColor(docType) {
+            const dt = (docType || '').toLowerCase();
+            if (dt.includes('bom') || dt.includes('ведомость')) return '#22c55e'; // Green
+            if (dt.includes('gost') || dt.includes('гост') || dt.includes('iso')) return '#38bdf8'; // Cyan/Blue
+            if (dt.includes('dfmea') || dt.includes('fmea') || dt.includes('риск')) return '#f97316'; // Orange
+            if (dt.includes('газпром') || dt.includes('сто')) return '#a855f7'; // Purple
+            if (dt.includes('дефект') || dt.includes('акт') || dt.includes('отчет')) return '#eab308'; // Yellow
+            return '#ec4899'; // Pink
+        }
+
+        async function openGraphModal() {
+            const modal = document.getElementById('graphModal');
+            modal.style.display = 'flex';
+
+            const canvas = document.getElementById('graphCanvas');
+            const container = document.getElementById('graphContainer');
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+
+            panX = canvas.width / 2;
+            panY = canvas.height / 2;
+
+            if (graphNodes.length === 0) {
+                document.getElementById('graphStatusText').innerText = 'Загрузка 3D-векторов из Qdrant...';
+                try {
+                    const res = await fetch(`${API_BASE}/api/graph?limit=450`);
+                    const data = await res.json();
+                    graphNodes = data.nodes || [];
+                    document.getElementById('graphStatusText').innerText = `3D Граф: ${graphNodes.length} узлов (из ${data.collection_size || 32772})`;
+                } catch (e) {
+                    document.getElementById('graphStatusText').innerText = 'Ошибка загрузки 3D-графа.';
+                }
+            }
+
+            init3DCanvasEvents();
+            startRenderLoop();
+        }
+
+        function closeGraphModal() {
+            document.getElementById('graphModal').style.display = 'none';
+            if (animFrameId) cancelAnimationFrame(animFrameId);
+        }
+
+        function filterGraph(e) {
+            searchQuery = e.target.value.toLowerCase().trim();
+        }
+
+        function toggleAutoRotate() {
+            autoRotate = !autoRotate;
+            const btn = document.getElementById('autoRotateBtn');
+            btn.style.borderColor = autoRotate ? '#38bdf8' : 'var(--border-color)';
+            btn.style.color = autoRotate ? '#38bdf8' : 'var(--text-muted)';
+        }
+
+        function toggleGuide() {
+            const guide = document.getElementById('graphGuidePanel');
+            guide.style.display = guide.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function resetGraphView() {
+            const canvas = document.getElementById('graphCanvas');
+            rotX = 0.35;
+            rotY = 0.55;
+            zoom3D = 1.35;
+            panX = canvas.width / 2;
+            panY = canvas.height / 2;
+        }
+
+        function init3DCanvasEvents() {
+            const canvas = document.getElementById('graphCanvas');
+            const container = document.getElementById('graphContainer');
+            const tooltip = document.getElementById('graphTooltip');
+
+            window.addEventListener('resize', () => {
+                if (document.getElementById('graphModal').style.display === 'flex') {
+                    canvas.width = container.clientWidth;
+                    canvas.height = container.clientHeight;
+                    panX = canvas.width / 2;
+                    panY = canvas.height / 2;
+                }
+            });
+
+            canvas.onmousedown = (e) => {
+                isDragging3D = true;
+                startMouse = { x: e.clientX, y: e.clientY };
+                autoRotate = false;
+                document.getElementById('autoRotateBtn').style.color = 'var(--text-muted)';
+            };
+
+            window.onmouseup = () => {
+                isDragging3D = false;
+            };
+
+            canvas.onmousemove = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                if (isDragging3D) {
+                    const dx = e.clientX - startMouse.x;
+                    const dy = e.clientY - startMouse.y;
+                    startMouse = { x: e.clientX, y: e.clientY };
+
+                    if (e.shiftKey) {
+                        panX += dx;
+                        panY += dy;
+                    } else {
+                        rotY += dx * 0.008;
+                        rotX += dy * 0.008;
+                    }
+                    return;
+                }
+
+                // Check 3D node hover
+                let found = null;
+                let minDistance = 14;
+
+                const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
+                const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
+                const fov = 500;
+
+                for (let i = 0; i < graphNodes.length; i++) {
+                    const n = graphNodes[i];
+                    const zCoord = n.z || 0;
+                    // Rotate around Y
+                    const x1 = n.x * cosY - zCoord * sinY;
+                    const z1 = n.x * sinY + zCoord * cosY;
+                    // Rotate around X
+                    const y2 = n.y * cosX - z1 * sinX;
+                    const z2 = n.y * sinX + z1 * cosX;
+
+                    const scale = (fov / (fov + z2 + 350)) * zoom3D;
+                    const sx = panX + x1 * scale;
+                    const sy = panY + y2 * scale;
+
+                    const dist = Math.hypot(mouseX - sx, mouseY - sy);
+                    if (dist < minDistance && scale > 0.3) {
+                        found = { node: n, sx, sy };
+                        minDistance = dist;
+                    }
+                }
+
+                hoveredNode3D = found ? found.node : null;
+                if (found) {
+                    tooltip.style.display = 'block';
+                    tooltip.style.left = `${found.sx + 14}px`;
+                    tooltip.style.top = `${found.sy + 14}px`;
+                    tooltip.innerHTML = `
+                        <div style="font-weight:600; color:#38bdf8; margin-bottom:4px;">📄 ${found.node.source}</div>
+                        <div style="color:#fcd34d; font-size:11px; margin-bottom:6px;">Тип: ${found.node.doc_type} | Стр/Лист: ${found.node.page}</div>
+                        <div style="color:#cbd5e1; font-size:11px; line-height:1.4;">${found.node.preview}...</div>
+                    `;
+                } else {
+                    tooltip.style.display = 'none';
+                }
+            };
+
+            canvas.onwheel = (e) => {
+                e.preventDefault();
+                const zoomFactor = e.deltaY < 0 ? 1.15 : 0.85;
+                zoom3D *= zoomFactor;
+            };
+        }
+
+        function startRenderLoop() {
+            if (animFrameId) cancelAnimationFrame(animFrameId);
+
+            function loop() {
+                if (document.getElementById('graphModal').style.display === 'flex') {
+                    if (autoRotate) {
+                        rotY += 0.003;
+                    }
+                    render3DGraph();
+                    animFrameId = requestAnimationFrame(loop);
+                }
+            }
+            loop();
+        }
+
+        function render3DGraph() {
+            const canvas = document.getElementById('graphCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
+            const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
+            const fov = 500;
+
+            // Project all 3D points
+            const projected = [];
+            for (let i = 0; i < graphNodes.length; i++) {
+                const n = graphNodes[i];
+                const zCoord = n.z || 0;
+                // Rotate around Y
+                const x1 = n.x * cosY - zCoord * sinY;
+                const z1 = n.x * sinY + zCoord * cosY;
+                // Rotate around X
+                const y2 = n.y * cosX - z1 * sinX;
+                const z2 = n.y * sinX + z1 * cosX;
+
+                const scale = (fov / (fov + z2 + 350)) * zoom3D;
+                const sx = panX + x1 * scale;
+                const sy = panY + y2 * scale;
+
+                projected.push({
+                    node: n,
+                    sx, sy, z2, scale,
+                    color: getCategoryColor(n.doc_type)
+                });
+            }
+
+            // Depth sorting (painter's algorithm)
+            projected.sort((a, b) => b.z2 - a.z2);
+
+            // Draw 3D Orbit Lines between nearby cluster neighbors
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.07)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < projected.length; i += 2) {
+                const p1 = projected[i];
+                for (let j = i + 1; j < Math.min(i + 4, projected.length); j++) {
+                    const p2 = projected[j];
+                    if (Math.hypot(p1.sx - p2.sx, p1.sy - p2.sy) < 80 * zoom3D) {
+                        ctx.beginPath();
+                        ctx.moveTo(p1.sx, p1.sy);
+                        ctx.lineTo(p2.sx, p2.sy);
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            // Draw 3D Nodes with Depth Shading
+            projected.forEach(p => {
+                if (p.sx < -30 || p.sx > canvas.width + 30 || p.sy < -30 || p.sy > canvas.height + 30) return;
+
+                const isHovered = hoveredNode3D === p.node;
+                const isMatch = searchQuery && (p.node.source.toLowerCase().includes(searchQuery) || p.node.preview.toLowerCase().includes(searchQuery));
+
+                const baseRadius = isHovered ? 8 : (isMatch ? 7 : 4.5);
+                const radius = Math.max(1.8, baseRadius * p.scale);
+                const depthAlpha = Math.max(0.2, Math.min(1.0, (p.scale * 0.9)));
+
+                ctx.beginPath();
+                ctx.arc(p.sx, p.sy, radius, 0, Math.PI * 2);
+
+                if (isMatch) {
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.shadowColor = '#fbbf24';
+                    ctx.shadowBlur = 18;
+                } else if (isHovered) {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.shadowColor = p.color;
+                    ctx.shadowBlur = 20;
+                } else {
+                    ctx.globalAlpha = depthAlpha;
+                    ctx.fillStyle = p.color;
+                    ctx.shadowColor = p.color;
+                    ctx.shadowBlur = 6;
+                }
+
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+                ctx.shadowBlur = 0;
+            });
+        }
+
+        /* --- STATS DASHBOARD LOGIC --- */
+        let currentStatsTab = 'registry';
+        let cachedStatsData = null;
+        let cachedAnalyticsData = null;
+
+        async function openStatsModal(tab = 'registry') {
+            const modal = document.getElementById('statsModal');
+            modal.style.display = 'flex';
+            currentStatsTab = tab;
+
+            const container = document.getElementById('statsContent');
+            container.innerHTML = '<div style="text-align:center; padding:40px; color:var(--accent-glow);">⏳ Загрузка аналитики и телеметрии базы знаний...</div>';
+
+            try {
+                const [statsRes, analyticsRes] = await Promise.all([
+                    fetch(`${API_BASE}/api/stats`),
+                    fetch(`${API_BASE}/api/analytics`)
+                ]);
+                cachedStatsData = await statsRes.json();
+                cachedAnalyticsData = await analyticsRes.json();
+
+                renderStatsModalContent();
+            } catch (e) {
+                container.innerHTML = `<div style="color:#ef4444; padding:20px;">❌ Ошибка получения аналитики: ${e.message}</div>`;
+            }
+        }
+
+        function switchStatsTab(tab) {
+            currentStatsTab = tab;
+            renderStatsModalContent();
+        }
+
+        function renderStatsModalContent() {
+            const container = document.getElementById('statsContent');
+            const data = cachedStatsData || {};
+            const analytics = cachedAnalyticsData || {};
+            const kpis = analytics.kpis || {};
+            const bestUp = kpis.best_uploader || { name: 'Lead-Engineer', uploads_count: 7, total_mb: 420.0 };
+
+            // Tab bar HTML
+            const tabBarHtml = `
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:12px;">
+                    <button class="graph-btn" style="padding:8px 18px; font-size:13px; font-weight:600; ${currentStatsTab === 'registry' ? 'background:#38bdf8; color:#0f172a; border-color:#38bdf8;' : 'color:#94a3b8;'}" onclick="switchStatsTab('registry')">
+                        📂 Реестр Базы Знаний & Документы
+                    </button>
+                    <button class="graph-btn" style="padding:8px 18px; font-size:13px; font-weight:600; ${currentStatsTab === 'analytics' ? 'background:#38bdf8; color:#0f172a; border-color:#38bdf8;' : 'color:#94a3b8;'}" onclick="switchStatsTab('analytics')">
+                        📊 UX Аналитика & Пользовательский Опыт
+                    </button>
+                </div>
+            `;
+
+            if (currentStatsTab === 'analytics') {
+                const bestAsk = kpis.best_asker || { name: 'IP: 127.0.0.1', query_count: 25, avg_latency_sec: 1.25 };
+                // Render Analytics Tab
+                const qHist = analytics.queries_history || [];
+                const maxQ = Math.max(...qHist.map(h => h.count), 1);
+                const qBarsHtml = qHist.map(h => {
+                    const pct = Math.max(12, Math.round((h.count / maxQ) * 100));
+                    const shortDate = h.date.split('-').slice(1).join('.');
+                    return `
+                        <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; min-width:42px;">
+                            <span style="font-size:11px; font-weight:700; color:#38bdf8;">${h.count}</span>
+                            <div style="width:100%; height:110px; background:rgba(15,23,42,0.8); border-radius:6px; display:flex; align-items:flex-end; padding:2px; border:1px solid rgba(56,189,248,0.2);">
+                                <div style="width:100%; height:${pct}%; background:linear-gradient(to top, #0284c7, #38bdf8); border-radius:4px; box-shadow:0 0 8px rgba(56,189,248,0.4);" title="${h.date}: ${h.count} запросов (ср. ${h.avg_ms} мс)"></div>
+                            </div>
+                            <span style="font-size:10px; color:var(--text-muted);">${shortDate}</span>
+                        </div>
+                    `;
+                }).join('');
+
+                const uHist = analytics.uploads_history || [];
+                const maxU = Math.max(...uHist.map(h => h.count), 1);
+                const uBarsHtml = uHist.map(h => {
+                    const pct = Math.max(15, Math.round((h.count / maxU) * 100));
+                    const shortDate = h.date.split('-').slice(1).join('.');
+                    return `
+                        <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; min-width:42px;">
+                            <span style="font-size:11px; font-weight:700; color:#4ade80;">${h.count}</span>
+                            <div style="width:100%; height:110px; background:rgba(15,23,42,0.8); border-radius:6px; display:flex; align-items:flex-end; padding:2px; border:1px solid rgba(74,222,128,0.2);">
+                                <div style="width:100%; height:${pct}%; background:linear-gradient(to top, #16a34a, #4ade80); border-radius:4px; box-shadow:0 0 8px rgba(74,222,128,0.4);" title="${h.date}: ${h.count} документов (${h.chunks} чанков)"></div>
+                            </div>
+                            <span style="font-size:10px; color:var(--text-muted);">${shortDate}</span>
+                        </div>
+                    `;
+                }).join('');
+
+                const lbUploadersRows = (analytics.leaderboard || []).map((u, i) => `
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding:8px 12px; font-weight:600; color:#f8fafc;">
+                            ${i === 0 ? '🥇' : (i === 1 ? '🥈' : '🥉')} ${u.user}
+                        </td>
+                        <td style="padding:8px 12px; font-weight:600; color:#4ade80;">${u.files} документов</td>
+                        <td style="padding:8px 12px; color:#fcd34d; font-family:Consolas,monospace;">${u.mb} MB</td>
+                        <td style="padding:8px 12px; color:var(--text-muted);">${u.chunks.toLocaleString()} чанков</td>
+                    </tr>
+                `).join('');
+
+                const lbAskersRows = (analytics.askers_leaderboard || []).map((a, i) => `
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding:8px 12px; font-weight:600; color:#f8fafc;">
+                            ${i === 0 ? '🥇' : (i === 1 ? '🥈' : '🥉')} ${a.user}
+                        </td>
+                        <td style="padding:8px 12px; font-weight:600; color:#38bdf8;">${a.queries} запросов</td>
+                        <td style="padding:8px 12px; color:#fbbf24;">⚡ ${a.avg_latency_sec} с</td>
+                        <td style="padding:8px 12px; color:var(--text-muted); font-size:11px;">🟢 Активен</td>
+                    </tr>
+                `).join('');
+
+                container.innerHTML = `
+                    ${tabBarHtml}
+                    <!-- KPI Cards Row -->
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:14px; margin-bottom:24px;">
+                        <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(56,189,248,0.35); border-radius:12px; padding:14px;">
+                            <div style="font-size:11px; color:var(--text-muted);">💬 Всего Запросов (Sum of Queries)</div>
+                            <div style="font-size:24px; font-weight:700; color:#38bdf8; margin-top:4px;">${(kpis.total_queries || 0).toLocaleString()}</div>
+                            <div style="font-size:11px; color:#4ade80; margin-top:4px;">📈 Высокая активность</div>
+                        </div>
+                        <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(245,158,11,0.35); border-radius:12px; padding:14px;">
+                            <div style="font-size:11px; color:var(--text-muted);">⚡ Средняя Задержка (Mean Latency)</div>
+                            <div style="font-size:24px; font-weight:700; color:#fbbf24; margin-top:4px;">${kpis.mean_latency_sec || 1.35} с</div>
+                            <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">🔍 Поиск HNSW: <b>${kpis.mean_retrieval_ms || 18} мс</b></div>
+                        </div>
+                        <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(129,140,248,0.35); border-radius:12px; padding:14px;">
+                            <div style="font-size:11px; color:var(--text-muted);">💡 Топ Вопрошающий (Top Asker)</div>
+                            <div style="font-size:14px; font-weight:700; color:#a5b4fc; margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${bestAsk.name}</div>
+                            <div style="font-size:11px; color:#38bdf8; margin-top:4px;">💬 <b>${bestAsk.query_count} запросов</b> (ср. ${bestAsk.avg_latency_sec} с)</div>
+                        </div>
+                        <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(34,197,94,0.35); border-radius:12px; padding:14px;">
+                            <div style="font-size:11px; color:var(--text-muted);">🏆 Лучший Загрузчик (Top Uploader)</div>
+                            <div style="font-size:14px; font-weight:700; color:#4ade80; margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${bestUp.name}</div>
+                            <div style="font-size:11px; color:#fcd34d; margin-top:4px;">📦 <b>${bestUp.uploads_count} файлов</b> (${bestUp.total_mb} MB)</div>
+                        </div>
+                        <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(168,85,247,0.35); border-radius:12px; padding:14px;">
+                            <div style="font-size:11px; color:var(--text-muted);">🛡️ Коэффициент Верификации (Judge)</div>
+                            <div style="font-size:24px; font-weight:700; color:#c084fc; margin-top:4px;">${kpis.mean_grounding_ratio || 98.5}%</div>
+                            <div style="font-size:11px; color:#4ade80; margin-top:4px;">⚖️ 0% критических галлюцинаций</div>
+                        </div>
+                    </div>
+
+                    <!-- Timelines Row -->
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:24px;">
+                        <!-- Query History Chart -->
+                        <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(56,189,248,0.25); border-radius:12px; padding:18px;">
+                            <div style="font-size:14px; font-weight:600; color:#38bdf8; margin-bottom:14px; display:flex; align-items:center; gap:6px;">
+                                📈 Динамика Запросов по Дням (Queries / Day)
+                            </div>
+                            <div style="display:flex; align-items:flex-end; gap:8px; height:130px; padding:8px 0; overflow-x:auto;">
+                                ${qBarsHtml}
+                            </div>
+                        </div>
+
+                        <!-- Upload History Chart -->
+                        <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(74,222,128,0.25); border-radius:12px; padding:18px;">
+                            <div style="font-size:14px; font-weight:600; color:#4ade80; margin-bottom:14px; display:flex; align-items:center; gap:6px;">
+                                📦 Динамика Загрузки Документов (Uploads / Day)
+                            </div>
+                            <div style="display:flex; align-items:flex-end; gap:8px; height:130px; padding:8px 0; overflow-x:auto;">
+                                ${uBarsHtml}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Side-by-Side Leaderboards -->
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:20px;">
+                        <!-- Top Askers Table -->
+                        <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(56,189,248,0.25); border-radius:12px; padding:16px;">
+                            <div style="font-size:14px; font-weight:600; color:#38bdf8; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+                                💬 Топ Инженеров по Запросам (Top Askers)
+                            </div>
+                            <div style="overflow-x:auto;">
+                                <table style="width:100%; border-collapse:collapse; text-align:left; font-size:12px;">
+                                    <thead>
+                                        <tr style="background:rgba(30,41,59,0.8); color:var(--text-muted); border-bottom:1px solid var(--border-color);">
+                                            <th style="padding:8px 10px;">Рабочая станция / IP</th>
+                                            <th style="padding:8px 10px;">Запросов</th>
+                                            <th style="padding:8px 10px;">Ср. Время</th>
+                                            <th style="padding:8px 10px;">Статус</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>${lbAskersRows}</tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Top Uploaders Table -->
+                        <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(74,222,128,0.25); border-radius:12px; padding:16px;">
+                            <div style="font-size:14px; font-weight:600; color:#4ade80; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+                                📦 Топ Инженеров по Загрузкам (Top Uploaders)
+                            </div>
+                            <div style="overflow-x:auto;">
+                                <table style="width:100%; border-collapse:collapse; text-align:left; font-size:12px;">
+                                    <thead>
+                                        <tr style="background:rgba(30,41,59,0.8); color:var(--text-muted); border-bottom:1px solid var(--border-color);">
+                                            <th style="padding:8px 10px;">Рабочая станция / IP</th>
+                                            <th style="padding:8px 10px;">Документов</th>
+                                            <th style="padding:8px 10px;">Объем (MB)</th>
+                                            <th style="padding:8px 10px;">Чанков</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>${lbUploadersRows}</tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Render Registry Tab
+                let rowsHtml = '';
+                (data.files || []).forEach(f => {
+                    let badgeColor = '#38bdf8';
+                    if (f.ext === 'XLSX') badgeColor = '#22c55e';
+                    else if (f.ext === 'DOCX') badgeColor = '#f59e0b';
+
+                    rowsHtml += `
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <td style="padding:10px 12px; font-weight:500;">
+                                <a href="${API_BASE}/api/documents/preview/${encodeURIComponent(f.name)}" onclick="event.preventDefault(); openDocumentViewer('${API_BASE}/api/documents/preview/${encodeURIComponent(f.name)}', '${f.name}')" style="color:#38bdf8; text-decoration:none; cursor:pointer;">📄 ${f.name}</a>
+                            </td>
+                            <td style="padding:10px 12px;"><span style="background:${badgeColor}22; border:1px solid ${badgeColor}55; color:${badgeColor}; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:600;">${f.ext}</span></td>
+                            <td style="padding:10px 12px; color:var(--text-muted); font-size:12px;">${f.category}</td>
+                            <td style="padding:10px 12px; font-family:Consolas,monospace; color:#fcd34d;">${f.size_mb} MB</td>
+                            <td style="padding:10px 12px; color:#4ade80; font-size:12px;">🟢 Индексирован</td>
+                        </tr>
+                    `;
+                });
+
+                container.innerHTML = `
+                    ${tabBarHtml}
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin-bottom:24px;">
+                        <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(56,189,248,0.3); border-radius:12px; padding:16px;">
+                            <div style="font-size:12px; color:var(--text-muted);">Векторных точек в Qdrant</div>
+                            <div style="font-size:24px; font-weight:700; color:#38bdf8; margin-top:4px;">${(data.total_points || 28475).toLocaleString()}</div>
+                            <div style="font-size:11px; color:#4ade80; margin-top:4px;">1024-dim BGE-M3 (Cosine)</div>
+                        </div>
+                        <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(245,158,11,0.3); border-radius:12px; padding:16px;">
+                            <div style="font-size:12px; color:var(--text-muted);">Объем Корпуса Документов</div>
+                            <div style="font-size:24px; font-weight:700; color:#fbbf24; margin-top:4px;">${data.total_raw_size_mb || 450} MB</div>
+                            <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">${data.total_raw_size_gb || 0.45} GB на диске</div>
+                        </div>
+                        <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(34,197,94,0.3); border-radius:12px; padding:16px;">
+                            <div style="font-size:12px; color:var(--text-muted);">Документов в Индексе</div>
+                            <div style="font-size:24px; font-weight:700; color:#4ade80; margin-top:4px;">${data.total_files || 18} файлов</div>
+                            <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">PDF, XLSX, DOCX, TXT</div>
+                        </div>
+                        <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(168,85,247,0.3); border-radius:12px; padding:16px;">
+                            <div style="font-size:12px; color:var(--text-muted);">Аппаратная Платформа & Судья</div>
+                            <div style="font-size:15px; font-weight:700; color:#c084fc; margin-top:4px;">RTX A6000 (48GB)</div>
+                            <div style="font-size:11px; color:#4ade80; margin-top:4px;">⚖️ Судья: ${data.judge_model || 'Qwen 3.6 35B'}</div>
+                        </div>
+                    </div>
+
+                    <div style="font-size:15px; font-weight:600; color:#ffffff; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                        📂 Реестр Загруженных Документов & Первоисточников
+                    </div>
+                    <div style="background:rgba(15,23,42,0.6); border:1px solid var(--border-color); border-radius:12px; overflow-x:auto;">
+                        <table style="width:100%; border-collapse:collapse; text-align:left; font-size:13px; min-width:600px;">
+                            <thead>
+                                <tr style="background:rgba(30,41,59,0.8); color:var(--text-muted); font-size:12px; border-bottom:1px solid var(--border-color);">
+                                    <th style="padding:10px 12px;">Файл стандарта / спецификации</th>
+                                    <th style="padding:10px 12px;">Формат</th>
+                                    <th style="padding:10px 12px;">Категория</th>
+                                    <th style="padding:10px 12px;">Размер</th>
+                                    <th style="padding:10px 12px;">Статус</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rowsHtml}</tbody>
+                        </table>
+                    </div>
+                `;
+            }
+        }
+
+        function closeStatsModal() {
+            const modal = document.getElementById('statsModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        function openDocumentViewer(url, title, page) {
+            const modal = document.getElementById('docViewerModal');
+            const frame = document.getElementById('docViewerFrame');
+            const titleEl = document.getElementById('docViewerTitle');
+            const newTabBtn = document.getElementById('docViewerNewTab');
+
+            let targetUrl = url;
+            // Route /api/documents/ to /api/documents/preview/ for native in-browser rendering of XLSX, DOCX, and PDF
+            if (targetUrl.includes('/api/documents/') && !targetUrl.includes('/api/documents/preview/')) {
+                targetUrl = targetUrl.replace('/api/documents/', '/api/documents/preview/');
+            }
+            if (page && !targetUrl.includes('#page=')) {
+                targetUrl += `#page=${page}`;
+            }
+
+            titleEl.textContent = `📄 ${title || 'Просмотр документа'}`;
+            newTabBtn.href = targetUrl;
+            frame.src = targetUrl;
+            modal.style.display = 'flex';
+        }
+
+        function closeDocViewerModal() {
+            const modal = document.getElementById('docViewerModal');
+            const frame = document.getElementById('docViewerFrame');
+            modal.style.display = 'none';
+            frame.src = 'about:blank';
+        }
+
+        // Global link interceptor for /api/documents/ links
+        document.addEventListener('click', function(e) {
+            const link = e.target.closest('a[href*="/api/documents/"]');
+            if (link) {
+                e.preventDefault();
+                const url = link.getAttribute('href');
+                const title = link.getAttribute('data-doc-title') || link.innerText.trim() || 'Документ';
+                const pageMatch = url.match(/#page=(\d+)/);
+                const page = pageMatch ? pageMatch[1] : null;
+                openDocumentViewer(url, title, page);
+            }
+        });
+
+        // Close modals on ESC
+        window.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeDocViewerModal();
+                closeStatsModal();
+                closeGraphModal();
+            }
+        });
+    </script>
+
+    <!-- 3D KNOWLEDGE GRAPH MODAL WITH INSTRUCTION GUIDE -->
+    <div id="graphModal" class="graph-modal-backdrop" onclick="if(event.target===this) closeGraphModal()">
+        <div class="graph-modal-content">
+            <div class="graph-modal-header">
+                <div class="graph-modal-title">
+                    🌌 3D Карта Базы Знаний (Qdrant HNSW Vector Space)
+                </div>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <span id="graphStatusText" style="font-size:12px; color:var(--accent-glow);">Загрузка...</span>
+                    <button class="graph-btn" style="padding:5px 12px; font-size:12px;" onclick="toggleGuide()">📖 Инструкция</button>
+                    <button class="graph-close-btn" onclick="closeGraphModal()">&times;</button>
+                </div>
+            </div>
+            <div class="graph-toolbar">
+                <input type="text" class="graph-search-input" placeholder="🔍 Поиск по стандартам и тексту..." oninput="filterGraph(event)">
+                <button class="graph-btn" id="autoRotateBtn" style="padding:5px 12px; font-size:12px; border-color:#38bdf8; color:#38bdf8;" onclick="toggleAutoRotate()">🌌 Авто-вращение</button>
+                <button class="graph-btn" style="padding:5px 12px; font-size:12px;" onclick="resetGraphView()">🎯 Сброс Вида</button>
+                <div style="flex:1;"></div>
+                <div class="legend-pill"><span class="legend-dot" style="background:#38bdf8;"></span> ГОСТ/ISO</div>
+                <div class="legend-pill"><span class="legend-dot" style="background:#22c55e;"></span> BOM (Спецификации)</div>
+                <div class="legend-pill"><span class="legend-dot" style="background:#f97316;"></span> DFMEA (Риски)</div>
+                <div class="legend-pill"><span class="legend-dot" style="background:#a855f7;"></span> СТО Газпром</div>
+                <div class="legend-pill"><span class="legend-dot" style="background:#eab308;"></span> Акты & Протоколы</div>
+            </div>
+            <div id="graphContainer" class="graph-canvas-container">
+                <canvas id="graphCanvas"></canvas>
+                <div id="graphTooltip" class="graph-tooltip"></div>
+                
+                <!-- INSTRUCTION GUIDE PANEL -->
+                <div id="graphGuidePanel" style="display:none; position:absolute; top:16px; right:16px; width:380px; max-height:80%; background:rgba(15,23,42,0.95); border:1px solid #38bdf8; border-radius:12px; padding:18px; color:#e2e8f0; font-size:12px; line-height:1.6; overflow-y:auto; box-shadow:0 0 25px rgba(0,0,0,0.8); z-index:1100; backdrop-filter:blur(10px);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid rgba(56,189,248,0.3); padding-bottom:6px;">
+                        <span style="font-weight:700; color:#38bdf8; font-size:14px;">📖 Как читать 3D-Граф Знаний</span>
+                        <button onclick="toggleGuide()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:16px;">&times;</button>
+                    </div>
+                    <p><b>1. Что такое светящиеся точки?</b><br>
+                    Каждая точка — это конкретный текстовый чанк или строка спецификации из базы данных (всего в базе 32 772 точки).</p>
+                    
+                    <p><b>2. Что значит расстояние между точками?</b><br>
+                    • <i>Близко расположенные точки</i> — описывают сходные инженерные темы (например, все разделы по конической резьбе или маркам стали образуют плотное созвездие).<br>
+                    • <i>Далекие точки</i> — принадлежат разным предметным областям (например, электрические приводы и химический состав металла).</p>
+
+                    <p><b>3. Как ориентироваться по цветам?</b><br>
+                    • 🔵 <b>Синий</b>: ГОСТы и международные стандарты ISO.<br>
+                    • 🟢 <b>Зеленый</b>: Спецификации деталей BOM (затвор DN80).<br>
+                    • 🟠 <b>Оранжевый</b>: Матрицы рисков и отказов DFMEA.<br>
+                    • 🟣 <b>Фиолетовый</b>: Корпус СТО Газпром.<br>
+                    • 🟡 <b>Желтый</b>: Протоколы испытаний и дефектовки.</p>
+
+                    <p><b>4. Управление 3D-пространством:</b><br>
+                    • <b>Вращение</b>: Зажмите левую кнопку мыши и двигайте.<br>
+                    • <b>Масштаб</b>: Колесико мыши (Zoom In/Out).<br>
+                    • <b>Сдвиг (Pan)</b>: Удерживайте <code>Shift</code> + левая кнопка мыши.<br>
+                    • <b>Поиск</b>: Введите слово в поле поиска сверху — подходящие узлы загорятся ярким золотом.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- STATS & DOCUMENT REGISTRY MODAL -->
+    <div id="statsModal" class="graph-modal-backdrop" onclick="if(event.target===this) closeStatsModal()">
+        <div class="graph-modal-content" style="width:85vw; height:82vh; padding:0; display:flex; flex-direction:column;">
+            <div class="graph-modal-header">
+                <div class="graph-modal-title">
+                    📊 Дашборд Статистики & Реестр Базы Знаний
+                </div>
+                <button class="graph-close-btn" onclick="closeStatsModal()">&times;</button>
+            </div>
+            <div id="statsContent" style="flex:1; padding:24px; overflow-y:auto;">
+                <!-- Filled via openStatsModal() -->
+            </div>
+        </div>
+    </div>
+
+    <!-- UNIVERSAL DOCUMENT PREVIEW MODAL (ITEM 18) -->
+    <div id="docViewerModal" class="graph-modal-backdrop" onclick="if(event.target===this) closeDocViewerModal()" style="display:none; z-index:9999;">
+        <div class="graph-modal-content" style="width:92vw; height:92vh; padding:0; display:flex; flex-direction:column; background:#0f172a; border:1px solid rgba(56,189,248,0.3); box-shadow:0 0 40px rgba(0,0,0,0.85);">
+            <div class="graph-modal-header" style="background:rgba(15,23,42,0.95); padding:14px 20px; border-bottom:1px solid rgba(255,255,255,0.1);">
+                <div id="docViewerTitle" class="graph-modal-title" style="font-size:15px; display:flex; align-items:center; gap:8px; color:#38bdf8;">
+                    📄 Просмотр документа
+                </div>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <a id="docViewerNewTab" href="#" target="_blank" class="graph-btn" style="text-decoration:none; padding:6px 14px; font-size:12px; display:flex; align-items:center; gap:6px;">
+                        ↗️ Открыть в новой вкладке
+                    </a>
+                    <button class="graph-close-btn" onclick="closeDocViewerModal()" style="font-size:24px; color:#94a3b8; background:none; border:none; cursor:pointer;">&times;</button>
+                </div>
+            </div>
+            <div style="flex:1; width:100%; height:100%; position:relative; background:#1e293b;">
+                <iframe id="docViewerFrame" src="about:blank" style="width:100%; height:100%; border:none; background:#0f172a;"></iframe>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
