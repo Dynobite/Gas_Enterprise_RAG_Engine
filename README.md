@@ -13,6 +13,11 @@
 ## 🌟 Key Architecture Highlights
 
 * 🧠 **Small-to-Big Parent Page Hydration (PageIndex Pattern)**: Searches micro-chunks via HNSW + Cross-Encoder for pinpoint accuracy, then dynamically hydrates the **100% full parent page text** (headers, footnotes, units, tolerances) in `< 1 ms` before passing to the LLM generator.
+* 🤖 **Multi-Tier Local LLM Suite**:
+  - **Primary Synthesis:** `qwen3.6:35b` (MoE) / `deepseek-r1:32b` (Deep technical reasoning).
+  - **Fast Interactive Co-Pilot:** `gpt-oss:20b` (Lightweight 20.9B parameter fast model for instant intent slot-filling & quick summaries).
+  - **Vision OCR:** `minicpm-v:latest` (8B VLM).
+  - **Embeddings:** `bge-m3` (1024-dim dense).
 * ⚡ **Two-Stage Hybrid Retrieval**:
   1. **Stage 1 (Qdrant HNSW)**: Dense multilingual semantic search (`bge-m3`, 1024 dimensions) in **~3 ms** across 32,000+ points.
   2. **Stage 2 (FlashRank)**: Cross-encoder deep attention re-scoring (`ms-marco-MiniLM-L-12-v2`) in **~18 ms**.
