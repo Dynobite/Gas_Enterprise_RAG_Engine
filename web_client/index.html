@@ -2083,10 +2083,16 @@
             const titleEl = document.getElementById('docViewerTitle');
             const newTabBtn = document.getElementById('docViewerNewTab');
 
-            currentDocumentFilename = title || (url ? url.split('/').pop().split('#')[0] : '');
-            currentDocumentFilename = decodeURIComponent(currentDocumentFilename);
+            let rawName = title || (url ? url.split('/').pop().split('#')[0] : '');
+            rawName = decodeURIComponent(rawName);
+            // Clean any leading emojis (e.g. 📄, 📝, 👁️)
+            rawName = rawName.replace(/^[^\wА-Яа-яA-Za-z0-9_\-\.]+\s*/, '').trim();
+            currentDocumentFilename = rawName;
 
             let targetUrl = url;
+            if (!targetUrl) {
+                targetUrl = `${API_BASE}/api/documents/preview/${encodeURIComponent(currentDocumentFilename)}`;
+            }
             if (targetUrl.includes('/api/documents/') && !targetUrl.includes('/api/documents/preview/')) {
                 targetUrl = targetUrl.replace('/api/documents/', '/api/documents/preview/');
             }
@@ -2132,7 +2138,10 @@
                 mdContainer.style.display = 'none';
                 rawContainer.style.display = 'none';
                 kpiBar.style.display = 'none';
-                if (targetUrl) frame.src = targetUrl;
+                const previewSrc = targetUrl || `${API_BASE}/api/documents/preview/${encodeURIComponent(currentDocumentFilename)}`;
+                if (!frame.src || frame.src === 'about:blank' || targetUrl) {
+                    frame.src = previewSrc;
+                }
             } else {
                 frame.style.display = 'none';
                 kpiBar.style.display = 'flex';
