@@ -2262,12 +2262,7 @@
                 <div class="graph-modal-title">
                     📊 Дашборд Статистики & Реестр Базы Знаний
                 </div>
-                <div style="display:flex; align-items:center; gap:12px;">
-                    <button class="graph-btn" style="padding:6px 14px; font-size:12px; font-weight:600; background:#3e3d32; border-color:#66d9ef; color:#66d9ef; display:inline-flex; align-items:center; gap:6px; cursor:pointer;" onclick="refreshStatsData()">
-                        <span class="stats-refresh-icon" style="display:inline-block; transition:transform 0.5s ease;">🔄</span> Обновить
-                    </button>
-                    <button class="graph-close-btn" onclick="closeStatsModal()">&times;</button>
-                </div>
+                <button class="graph-close-btn" onclick="closeStatsModal()">&times;</button>
             </div>
             <div id="statsContent" style="flex:1; padding:24px; overflow-y:auto;">
                 <!-- Filled via openStatsModal() -->
