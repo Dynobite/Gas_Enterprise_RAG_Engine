@@ -49,13 +49,45 @@
         }
 
         header {
-            padding: 20px 40px;
+            padding: 16px 40px;
             background: rgba(30, 31, 28, 0.92);
             backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: relative;
+        }
+
+        .header-center-logo {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+            z-index: 10;
+        }
+
+        .mospromgaz-logo {
+            height: 38px;
+            width: auto;
+            max-width: 240px;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5)) brightness(1.05);
+            transition: transform 0.25s ease, filter 0.25s ease;
+        }
+
+        .mospromgaz-logo:hover {
+            transform: scale(1.05);
+            filter: drop-shadow(0 0 14px rgba(251, 191, 36, 0.45)) brightness(1.15);
+        }
+
+        @media (max-width: 960px) {
+            .header-center-logo {
+                display: none;
+            }
         }
 
         .logo-group {
@@ -1015,6 +1047,12 @@
                 <div style="font-size: 12px; color: var(--text-muted);">Инженерная RAG-Система ОИиР (Strict Citations & Zero Gaslighting)</div>
             </div>
         </div>
+
+        <!-- Center Corporate Logo (МОСПРОМГАЗ) -->
+        <div class="header-center-logo">
+            <img src="/Logo.png" alt="МОСПРОМГАЗ" class="mospromgaz-logo" onerror="this.src='/static/Logo.png'" />
+        </div>
+
         <div class="status-badge">
             <div class="status-dot"></div>
             Сервер c14753 (RTX A6000 48GB)

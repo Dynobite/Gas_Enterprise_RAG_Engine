@@ -871,8 +871,23 @@ def get_db_stats():
 
 # Mount Web Client static files
 web_dir = os.path.join(project_root, "web_client")
+references_dir = os.path.join(project_root, "references")
 if os.path.exists(web_dir):
     app.mount("/static", StaticFiles(directory=web_dir), name="static")
+
+@app.get("/Logo.png")
+@app.get("/logo.png")
+def serve_logo():
+    logo_paths = [
+        os.path.join(references_dir, "Logo.png"),
+        os.path.join(references_dir, "logo.png"),
+        os.path.join(web_dir, "Logo.png"),
+        os.path.join(web_dir, "logo.png"),
+    ]
+    for p in logo_paths:
+        if os.path.exists(p):
+            return FileResponse(p, media_type="image/png")
+    raise HTTPException(status_code=404, detail="Logo not found")
 
 @app.get("/", response_class=HTMLResponse)
 def serve_home():
