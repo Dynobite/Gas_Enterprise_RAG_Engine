@@ -1999,21 +1999,21 @@
                     if (f.ext === 'XLSX') badgeColor = '#a6e22e';
                     else if (f.ext === 'DOCX') badgeColor = '#fd971f';
 
-                    rowsHtml += `
+                                        rowsHtml += `
                         <tr style="border-bottom: 1px solid rgba(248,248,242,0.08); transition: background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
                             <td style="padding:10px 12px; font-weight:500;">
-                                <a href="${API_BASE}/api/documents/preview/${encodeURIComponent(f.name)}" onclick="event.preventDefault(); openDocumentViewer('${API_BASE}/api/documents/preview/${encodeURIComponent(f.name)}', '${f.name}', null, 'preview')" style="color:#66d9ef; text-decoration:none; cursor:pointer; font-weight:600;">📄 ${f.name}</a>
+                                <a href="${API_BASE}/api/documents/preview/${encodeURIComponent(f.name)}" onclick="event.preventDefault(); openDocumentViewer('${API_BASE}/api/documents/preview/${encodeURIComponent(f.name)}', '${f.name}')" style="color:#66d9ef; text-decoration:none; cursor:pointer; font-weight:600;">📄 ${f.name}</a>
                             </td>
                             <td style="padding:10px 12px;"><span style="background:${badgeColor}22; border:1px solid ${badgeColor}55; color:${badgeColor}; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700;">${f.ext}</span></td>
                             <td style="padding:10px 12px; color:var(--text-muted); font-size:12px;">${f.category}</td>
                             <td style="padding:10px 12px; font-family:Consolas,monospace; color:#e6db74;">${f.size_mb} MB</td>
                             <td style="padding:10px 12px; display:flex; align-items:center; gap:8px;">
-                                <button class="graph-btn" style="padding:4px 10px; font-size:11px; background:#3e3d32; border-color:#66d9ef; color:#66d9ef;" onclick="openDocumentViewer('${API_BASE}/api/documents/preview/${encodeURIComponent(f.name)}', '${f.name}', null, 'preview')">
-                                    👁️ Оригинал
+                                <button class="graph-btn" style="padding:5px 12px; font-size:11px; background:#3e3d32; border-color:#66d9ef; color:#66d9ef;" onclick="openDocumentViewer('${API_BASE}/api/documents/preview/${encodeURIComponent(f.name)}', '${f.name}')">
+                                    👁️ Просмотр
                                 </button>
-                                <button class="graph-btn" style="padding:4px 10px; font-size:11px; background:rgba(230,219,116,0.15); border-color:#e6db74; color:#e6db74;" onclick="openDocumentViewer('${API_BASE}/api/documents/preview/${encodeURIComponent(f.name)}', '${f.name}', null, 'markdown')">
-                                    📝 Верификация MD
-                                </button>
+                                <a class="graph-btn" style="text-decoration:none; padding:5px 12px; font-size:11px; background:rgba(166,226,46,0.12); border-color:#a6e22e; color:#a6e22e;" href="${API_BASE}/api/documents/parsed/${encodeURIComponent(f.name)}/download" target="_blank">
+                                    💾 Скачать .md (Stage 1)
+                                </a>
                             </td>
                         </tr>
                     `;
@@ -2055,7 +2055,7 @@
                                     <th style="padding:10px 12px;">Формат</th>
                                     <th style="padding:10px 12px;">Категория</th>
                                     <th style="padding:10px 12px;">Размер</th>
-                                    <th style="padding:10px 12px; width:220px;">Действия / Проверка</th>
+                                    <th style="padding:10px 12px; width:260px;">Верификация & Просмотр</th>
                                 </tr>
                             </thead>
                             <tbody>${rowsHtml}</tbody>
@@ -2073,25 +2073,20 @@
         }
 
 
-        /* --- DUAL DOCUMENT & MARKDOWN QUALITY INSPECTOR LOGIC --- */
-        let currentViewerMode = 'preview'; // 'preview', 'markdown', 'raw'
-        let currentDocumentFilename = '';
-        let currentParsedData = null;
-
-        async function openDocumentViewer(url, title, page, defaultMode = 'preview') {
+        /* --- SIMPLIFIED UNIVERSAL DOCUMENT PREVIEWER --- */
+        function openDocumentViewer(url, title, page) {
             const modal = document.getElementById('docViewerModal');
+            const frame = document.getElementById('docViewerFrame');
             const titleEl = document.getElementById('docViewerTitle');
             const newTabBtn = document.getElementById('docViewerNewTab');
 
             let rawName = title || (url ? url.split('/').pop().split('#')[0] : '');
             rawName = decodeURIComponent(rawName);
-            // Clean any leading emojis (e.g. 📄, 📝, 👁️)
             rawName = rawName.replace(/^[^\wА-Яа-яA-Za-z0-9_\-\.]+\s*/, '').trim();
-            currentDocumentFilename = rawName;
 
             let targetUrl = url;
             if (!targetUrl) {
-                targetUrl = `${API_BASE}/api/documents/preview/${encodeURIComponent(currentDocumentFilename)}`;
+                targetUrl = `${API_BASE}/api/documents/preview/${encodeURIComponent(rawName)}`;
             }
             if (targetUrl.includes('/api/documents/') && !targetUrl.includes('/api/documents/preview/')) {
                 targetUrl = targetUrl.replace('/api/documents/', '/api/documents/preview/');
@@ -2100,159 +2095,10 @@
                 targetUrl += `#page=${page}`;
             }
 
-            titleEl.textContent = `📄 ${currentDocumentFilename}`;
+            titleEl.textContent = `📄 ${rawName || 'Просмотр документа'}`;
             newTabBtn.href = targetUrl;
-
+            frame.src = targetUrl;
             modal.style.display = 'flex';
-            switchViewerTab(defaultMode, targetUrl);
-        }
-
-        async function switchViewerTab(mode, targetUrl) {
-            currentViewerMode = mode;
-            const frame = document.getElementById('docViewerFrame');
-            const mdContainer = document.getElementById('docMarkdownContainer');
-            const rawContainer = document.getElementById('docMarkdownRawContainer');
-            const kpiBar = document.getElementById('docQualityKpiBar');
-            const tabPreviewBtn = document.getElementById('tabBtnPreview');
-            const tabMdBtn = document.getElementById('tabBtnMd');
-            const tabRawBtn = document.getElementById('tabBtnRaw');
-
-            // Update Tab Button Styles
-            [tabPreviewBtn, tabMdBtn, tabRawBtn].forEach(b => {
-                if (b) {
-                    b.style.background = 'rgba(39,40,34,0.6)';
-                    b.style.color = '#8f908a';
-                    b.style.borderColor = 'rgba(248,248,242,0.12)';
-                    b.style.boxShadow = 'none';
-                }
-            });
-
-            if (mode === 'preview') {
-                if (tabPreviewBtn) {
-                    tabPreviewBtn.style.background = '#f92672';
-                    tabPreviewBtn.style.color = '#ffffff';
-                    tabPreviewBtn.style.borderColor = '#f92672';
-                    tabPreviewBtn.style.boxShadow = '0 0 12px rgba(249,38,114,0.4)';
-                }
-                frame.style.display = 'block';
-                mdContainer.style.display = 'none';
-                rawContainer.style.display = 'none';
-                kpiBar.style.display = 'none';
-                const previewSrc = targetUrl || `${API_BASE}/api/documents/preview/${encodeURIComponent(currentDocumentFilename)}`;
-                if (!frame.src || frame.src === 'about:blank' || targetUrl) {
-                    frame.src = previewSrc;
-                }
-            } else {
-                frame.style.display = 'none';
-                kpiBar.style.display = 'flex';
-
-                if (mode === 'markdown') {
-                    if (tabMdBtn) {
-                        tabMdBtn.style.background = '#e6db74';
-                        tabMdBtn.style.color = '#1e1f1c';
-                        tabMdBtn.style.borderColor = '#e6db74';
-                        tabMdBtn.style.boxShadow = '0 0 12px rgba(230,219,116,0.4)';
-                    }
-                    mdContainer.style.display = 'block';
-                    rawContainer.style.display = 'none';
-                } else if (mode === 'raw') {
-                    if (tabRawBtn) {
-                        tabRawBtn.style.background = '#66d9ef';
-                        tabRawBtn.style.color = '#1e1f1c';
-                        tabRawBtn.style.borderColor = '#66d9ef';
-                        tabRawBtn.style.boxShadow = '0 0 12px rgba(102,217,239,0.4)';
-                    }
-                    mdContainer.style.display = 'none';
-                    rawContainer.style.display = 'block';
-                }
-
-                // Load parsed Markdown if not loaded
-                if (!currentParsedData || currentParsedData.filename !== currentDocumentFilename) {
-                    mdContainer.innerHTML = '<div style="text-align:center; padding:50px; color:#66d9ef;">⏳ Извлечение и структурирование Markdown (Stage 1 Parsing)...</div>';
-                    rawContainer.textContent = 'Загрузка...';
-                    try {
-                        const res = await fetch(`${API_BASE}/api/documents/parsed/${encodeURIComponent(currentDocumentFilename)}`);
-                        currentParsedData = await res.json();
-                    } catch (err) {
-                        mdContainer.innerHTML = `<div style="color:#f92672; padding:20px;">❌ Ошибка получения Markdown: ${err.message}</div>`;
-                        return;
-                    }
-                }
-
-                renderParsedMarkdownView();
-            }
-        }
-
-        async function loadFullMarkdown() {
-            const mdContainer = document.getElementById('docMarkdownContainer');
-            mdContainer.innerHTML = '<div style="text-align:center; padding:30px; color:#66d9ef;">⏳ Загрузка и рендеринг полного текста документа...</div>';
-            try {
-                const res = await fetch(`${API_BASE}/api/documents/parsed/${encodeURIComponent(currentDocumentFilename)}?full=true`);
-                currentParsedData = await res.json();
-                renderParsedMarkdownView(true);
-            } catch (err) {
-                mdContainer.innerHTML = `<div style="color:#f92672; padding:20px;">❌ Ошибка загрузки: ${err.message}</div>`;
-            }
-        }
-
-        function renderParsedMarkdownView(isFull = false) {
-            if (!currentParsedData) return;
-            const md = currentParsedData.markdown || '';
-            const meta = currentParsedData.metadata || {};
-            const totalChars = meta.char_count || currentParsedData.total_chars || md.length;
-            const totalWords = meta.word_count || Math.round(totalChars / 6);
-
-            // Render KPIs instantly without heavy regex
-            document.getElementById('kpiChars').textContent = totalChars.toLocaleString();
-            document.getElementById('kpiWords').textContent = totalWords.toLocaleString();
-            document.getElementById('kpiChunks').textContent = (meta.chunks_count || 1).toLocaleString();
-            document.getElementById('kpiTables').textContent = (meta.table_lines ? `${meta.table_lines} строк` : (meta.has_tables ? 'Да' : 'Нет'));
-
-            // Render Formatted Markdown
-            const mdContainer = document.getElementById('docMarkdownContainer');
-            if (currentParsedData.is_truncated && !isFull) {
-                const banner = `\n\n---\n\n> ⚡ **Показаны первые 250 000 символов (из ${totalChars.toLocaleString()}) для плавности браузера.**\n\n<button class="graph-btn" style="margin-top:10px; padding:6px 16px; background:#f92672; color:#fff;" onclick="loadFullMarkdown()">🚀 Загрузить весь документ целиком (${Math.round(totalChars/1024)} KB)</button>\n\n`;
-                if (window.marked) {
-                    mdContainer.innerHTML = marked.parse(md + banner);
-                } else {
-                    mdContainer.textContent = md;
-                }
-            } else {
-                if (window.marked) {
-                    mdContainer.innerHTML = marked.parse(md);
-                } else {
-                    mdContainer.textContent = md;
-                }
-            }
-
-            // Render Raw View
-            const rawEl = document.getElementById('docMarkdownRawCode');
-            if (currentParsedData.is_truncated && !isFull) {
-                rawEl.textContent = md + `\n\n... [Остальные ${(totalChars - md.length).toLocaleString()} символов доступны по кнопке Скачать .md или Загрузить полный текст]`;
-            } else {
-                rawEl.textContent = md;
-            }
-        }
-
-        function copyParsedMarkdown() {
-            if (!currentParsedData || !currentParsedData.markdown) return;
-            navigator.clipboard.writeText(currentParsedData.markdown).then(() => {
-                const btn = document.getElementById('btnCopyMd');
-                const orig = btn.innerHTML;
-                btn.innerHTML = '✅ Скопировано!';
-                btn.style.borderColor = '#a6e22e';
-                btn.style.color = '#a6e22e';
-                setTimeout(() => {
-                    btn.innerHTML = orig;
-                    btn.style.borderColor = '#66d9ef';
-                    btn.style.color = '#66d9ef';
-                }, 2000);
-            });
-        }
-
-        function downloadParsedMarkdown() {
-            if (!currentDocumentFilename) return;
-            window.open(`${API_BASE}/api/documents/parsed/${encodeURIComponent(currentDocumentFilename)}/download`, '_blank');
         }
 
         function closeDocViewerModal() {
@@ -2260,9 +2106,7 @@
             const frame = document.getElementById('docViewerFrame');
             modal.style.display = 'none';
             frame.src = 'about:blank';
-            currentParsedData = null;
         }
-
 
         // Global link interceptor for /api/documents/ links
         document.addEventListener('click', function(e) {
@@ -2360,75 +2204,27 @@
         </div>
     </div>
 
-        <!-- UNIVERSAL DOCUMENT & STAGE 1 MARKDOWN QUALITY INSPECTOR MODAL -->
+            <!-- UNIVERSAL DOCUMENT PREVIEW MODAL -->
     <div id="docViewerModal" class="graph-modal-backdrop" onclick="if(event.target===this) closeDocViewerModal()" style="display:none; z-index:9999;">
         <div class="graph-modal-content" style="width:92vw; height:92vh; padding:0; display:flex; flex-direction:column; background:#272822; border:1px solid rgba(248,248,242,0.2); box-shadow:0 0 40px rgba(0,0,0,0.9);">
-            <!-- Modal Header with View Mode Switchers -->
-            <div class="graph-modal-header" style="background:#1e1f1c; padding:12px 24px; border-bottom:1px solid rgba(248,248,242,0.12); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div class="graph-modal-header" style="background:#1e1f1c; padding:14px 24px; border-bottom:1px solid rgba(248,248,242,0.12); display:flex; justify-content:space-between; align-items:center;">
                 <div id="docViewerTitle" class="graph-modal-title" style="font-size:15px; display:flex; align-items:center; gap:8px; color:#66d9ef; font-weight:700;">
                     📄 Просмотр документа
                 </div>
-
-                <!-- Inspector Mode Switcher Tabs -->
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <button id="tabBtnPreview" class="graph-btn" style="padding:6px 14px; font-size:12px; background:#f92672; color:#ffffff; border-color:#f92672;" onclick="switchViewerTab('preview')">
-                        📄 Исходный файл (PDF / Excel / DOCX)
-                    </button>
-                    <button id="tabBtnMd" class="graph-btn" style="padding:6px 14px; font-size:12px; background:rgba(39,40,34,0.6); color:#8f908a; border-color:rgba(248,248,242,0.12);" onclick="switchViewerTab('markdown')">
-                        📝 Извлеченный Markdown (Stage 1)
-                    </button>
-                    <button id="tabBtnRaw" class="graph-btn" style="padding:6px 14px; font-size:12px; background:rgba(39,40,34,0.6); color:#8f908a; border-color:rgba(248,248,242,0.12);" onclick="switchViewerTab('raw')">
-                        💻 Исходный код MD
-                    </button>
-                </div>
-
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <a id="docViewerNewTab" href="#" target="_blank" class="graph-btn" style="text-decoration:none; padding:6px 12px; font-size:12px;">
-                        ↗️ В новой вкладке
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <a id="docViewerNewTab" href="#" target="_blank" class="graph-btn" style="text-decoration:none; padding:6px 14px; font-size:12px; display:flex; align-items:center; gap:6px;">
+                        ↗️ Открыть в новой вкладке
                     </a>
                     <button class="graph-close-btn" onclick="closeDocViewerModal()" style="font-size:24px; color:#8f908a; background:none; border:none; cursor:pointer;">&times;</button>
                 </div>
             </div>
-
-            <!-- Parsing Quality Metrics Bar (Visible in MD Modes) -->
-            <div id="docQualityKpiBar" style="display:none; padding:10px 24px; background:#1e1f1c; border-bottom:1px solid rgba(248,248,242,0.12); display:flex; justify-content:space-between; align-items:center; font-size:12px; flex-wrap:wrap; gap:10px;">
-                <div style="display:flex; align-items:center; gap:16px;">
-                    <span style="color:#a6e22e; font-weight:600; display:flex; align-items:center; gap:4px;">
-                        ✅ Stage 1 Парсинг завершен
-                    </span>
-                    <span style="color:var(--text-muted);">Символов: <b id="kpiChars" style="color:#f8f8f2;">-</b></span>
-                    <span style="color:var(--text-muted);">Слов: <b id="kpiWords" style="color:#f8f8f2;">-</b></span>
-                    <span style="color:var(--text-muted);">Чанков/Страниц: <b id="kpiChunks" style="color:#66d9ef;">-</b></span>
-                    <span style="color:var(--text-muted);">Таблицы: <b id="kpiTables" style="color:#e6db74;">-</b></span>
-                </div>
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <button id="btnCopyMd" class="graph-btn" style="padding:4px 12px; font-size:12px; border-color:#66d9ef; color:#66d9ef;" onclick="copyParsedMarkdown()">
-                        📋 Копировать Markdown
-                    </button>
-                    <button class="graph-btn" style="padding:4px 12px; font-size:12px; border-color:#a6e22e; color:#a6e22e;" onclick="downloadParsedMarkdown()">
-                        💾 Скачать .md
-                    </button>
-                </div>
-            </div>
-
-            <!-- Main Content Panels -->
-            <div style="flex:1; width:100%; height:100%; position:relative; overflow:hidden; background:#272822;">
-                <!-- View 1: Original IFrame -->
+            <div style="flex:1; width:100%; height:100%; position:relative; background:#272822;">
                 <iframe id="docViewerFrame" src="about:blank" style="width:100%; height:100%; border:none; background:#272822;"></iframe>
-
-                <!-- View 2: Formatted Markdown Render -->
-                <div id="docMarkdownContainer" class="message assistant" style="display:none; width:100%; height:100%; overflow-y:auto; padding:30px 48px; background:#272822; color:#f8f8f2; font-size:14px; line-height:1.7; max-width:100%; border-radius:0; border:none;">
-                    <!-- Rendered Markdown will be inserted here -->
-                </div>
-
-                <!-- View 3: Raw Markdown Code Block -->
-                <div id="docMarkdownRawContainer" style="display:none; width:100%; height:100%; overflow-y:auto; padding:20px 28px; background:#1e1f1c;">
-                    <pre style="margin:0; background:transparent; border:none; font-family:Consolas,Monaco,monospace; font-size:13px; color:#a6e22e; line-height:1.5; white-space:pre-wrap;"><code id="docMarkdownRawCode"></code></pre>
-                </div>
             </div>
         </div>
     </div>
 </body>
+
 
 
 </html>
