@@ -29,6 +29,18 @@
 
 ---
 
+## 📸 Interface & System Screenshots
+
+<div align="center">
+  <img src="screenshots/Screenshot_1.png" alt="Engineering Q&A Interface & Citations" width="95%" />
+  <p><em>Figure 1: Production Monokai Dark Web Client — Streaming generation with 1-click interactive citations and Fact-Check Guardrail.</em></p>
+  <br/>
+  <img src="screenshots/Screenshot_2.png" alt="3D Knowledge Graph & Analytics" width="95%" />
+  <p><em>Figure 2: Interactive 3D PCA Vector Knowledge Graph, In-Browser Document Previewer & Client IP Analytics.</em></p>
+</div>
+
+---
+
 ## 🏗️ Multi-Stage System Architecture
 
 ```mermaid
