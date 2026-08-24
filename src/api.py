@@ -323,11 +323,11 @@ def get_document_preview(filename: str, page: Optional[int] = 1, sheet: Optional
         target_doc_url = f"/api/documents/{urllib.parse.quote(decoded_filename)}#page={page or 1}"
         return HTMLResponse(f"""<!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"><title>{html.escape(decoded_filename)}</title><style>body,html{{margin:0;padding:0;height:100%;overflow:hidden;background:#0f172a;}}iframe{{width:100%;height:100%;border:none;}}</style></head>
+<head><meta charset="utf-8"><title>{html.escape(decoded_filename)}</title><style>body,html{{margin:0;padding:0;height:100%;overflow:hidden;background:#272822;}}iframe{{width:100%;height:100%;border:none;}}</style></head>
 <body><iframe src="{target_doc_url}"></iframe></body>
 </html>""")
 
-    # 2. Excel Spreadsheets (.xlsx, .xls): Responsive HTML Table Viewer
+    # 2. Excel Spreadsheets (.xlsx, .xls): Responsive Monokai HTML Table Viewer
     elif ext in [".xlsx", ".xls"]:
         try:
             import openpyxl
@@ -338,7 +338,7 @@ def get_document_preview(filename: str, page: Optional[int] = 1, sheet: Optional
 
             # Build sheet tabs
             tabs_html = "".join([
-                f'<a href="/api/documents/preview/{urllib.parse.quote(decoded_filename)}?sheet={urllib.parse.quote(sn)}" style="padding:6px 14px; text-decoration:none; border-radius:6px; font-size:13px; font-weight:600; {"background:#38bdf8; color:#0f172a;" if sn == active_sheet else "background:rgba(255,255,255,0.08); color:#94a3b8;"}">{html.escape(sn)}</a>'
+                f'<a href="/api/documents/preview/{urllib.parse.quote(decoded_filename)}?sheet={urllib.parse.quote(sn)}" style="padding:6px 14px; text-decoration:none; border-radius:6px; font-size:13px; font-weight:600; {"background:#f92672; color:#ffffff; box-shadow:0 0 10px rgba(249,38,114,0.4);" if sn == active_sheet else "background:#3e3d32; color:#8f908a;"}">{html.escape(sn)}</a>'
                 for sn in sheet_names
             ])
 
@@ -351,8 +351,8 @@ def get_document_preview(filename: str, page: Optional[int] = 1, sheet: Optional
             table_rows_html = ""
             for r_idx, r in enumerate(rows_data):
                 tag = "th" if r_idx == 0 else "td"
-                cells = "".join([f"<{tag} style='padding:8px 12px; border:1px solid rgba(255,255,255,0.1); white-space:nowrap;'>{html.escape(c)}</{tag}>" for c in r])
-                bg = "background:rgba(56,189,248,0.15); color:#38bdf8; position:sticky; top:0;" if r_idx == 0 else ("background:rgba(255,255,255,0.02);" if r_idx % 2 == 0 else "background:transparent;")
+                cells = "".join([f"<{tag} style='padding:8px 12px; border:1px solid rgba(248,248,242,0.12); white-space:nowrap;'>{html.escape(c)}</{tag}>" for c in r])
+                bg = "background:#1e1f1c; color:#66d9ef; position:sticky; top:0; font-weight:600;" if r_idx == 0 else ("background:#272822;" if r_idx % 2 == 0 else "background:rgba(30,31,28,0.7);")
                 table_rows_html += f"<tr style='{bg}'>{cells}</tr>"
 
             return HTMLResponse(f"""<!DOCTYPE html>
@@ -361,12 +361,13 @@ def get_document_preview(filename: str, page: Optional[int] = 1, sheet: Optional
     <meta charset="utf-8">
     <title>{html.escape(decoded_filename)}</title>
     <style>
-        body {{ margin:0; padding:16px; background:#0f172a; color:#f8fafc; font-family:'Segoe UI',system-ui,sans-serif; font-size:13px; }}
+        body {{ margin:0; padding:16px; background:#272822; color:#f8f8f2; font-family:'Inter',system-ui,sans-serif; font-size:13px; }}
         .header {{ display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px; }}
-        .search-box {{ background:rgba(30,41,59,0.8); border:1px solid rgba(255,255,255,0.15); color:#fff; padding:6px 12px; border-radius:6px; font-size:12px; width:260px; }}
-        .table-wrap {{ overflow:auto; max-height:85vh; border:1px solid rgba(255,255,255,0.1); border-radius:8px; }}
+        .search-box {{ background:#1e1f1c; border:1px solid rgba(248,248,242,0.18); color:#f8f8f2; padding:6px 12px; border-radius:6px; font-size:12px; width:260px; outline:none; }}
+        .search-box:focus {{ border-color:#f92672; box-shadow:0 0 10px rgba(249,38,114,0.3); }}
+        .table-wrap {{ overflow:auto; max-height:85vh; border:1px solid rgba(248,248,242,0.15); border-radius:8px; }}
         table {{ border-collapse:collapse; width:100%; text-align:left; }}
-        tr:hover {{ background:rgba(56,189,248,0.08) !important; }}
+        tr:hover {{ background:rgba(102,217,239,0.1) !important; }}
     </style>
     <script>
         function filterTable() {{
@@ -382,7 +383,7 @@ def get_document_preview(filename: str, page: Optional[int] = 1, sheet: Optional
 <body>
     <div class="header">
         <div style="display:flex; align-items:center; gap:8px;">
-            <span style="font-weight:700; color:#38bdf8; font-size:14px;">📊 {html.escape(decoded_filename)}</span>
+            <span style="font-weight:700; color:#66d9ef; font-size:14px;">📊 {html.escape(decoded_filename)}</span>
             <div style="display:flex; gap:6px; margin-left:12px;">{tabs_html}</div>
         </div>
         <input id="search" type="text" class="search-box" placeholder="🔍 Поиск по таблице..." oninput="filterTable()">
@@ -395,9 +396,9 @@ def get_document_preview(filename: str, page: Optional[int] = 1, sheet: Optional
 </body>
 </html>""")
         except Exception as e:
-            return HTMLResponse(f"<div style='color:#ef4444; padding:20px; font-family:sans-serif;'>❌ Ошибка рендеринга Excel: {html.escape(str(e))}</div>")
+            return HTMLResponse(f"<div style='color:#f92672; padding:20px;'>⚠️ Ошибка рендеринга таблицы: {html.escape(str(e))}</div>", status_code=500)
 
-    # 3. Word Documents (.docx): Mammoth HTML Renderer
+    # 3. Word Documents (.docx, .doc): Monokai HTML Typography
     elif ext in [".docx", ".doc"]:
         try:
             import mammoth
@@ -410,23 +411,25 @@ def get_document_preview(filename: str, page: Optional[int] = 1, sheet: Optional
     <meta charset="utf-8">
     <title>{html.escape(decoded_filename)}</title>
     <style>
-        body {{ margin:0; padding:30px 40px; background:#0f172a; color:#e2e8f0; font-family:'Segoe UI',Inter,sans-serif; line-height:1.7; font-size:14px; max-width:900px; margin:auto; }}
-        h1,h2,h3,h4 {{ color:#38bdf8; margin-top:20px; }}
-        table {{ border-collapse:collapse; width:100%; margin:16px 0; background:rgba(30,41,59,0.5); }}
-        th,td {{ border:1px solid rgba(255,255,255,0.15); padding:8px 12px; }}
-        th {{ background:rgba(56,189,248,0.15); color:#38bdf8; }}
-        blockquote {{ border-left:3px solid #38bdf8; padding-left:14px; color:#94a3b8; font-style:italic; }}
+        body {{ margin:0; padding:28px 40px; background:#272822; color:#f8f8f2; font-family:'Inter',system-ui,sans-serif; line-height:1.7; font-size:14px; max-width:960px; margin:auto; }}
+        .header {{ font-size:16px; font-weight:700; color:#66d9ef; margin-bottom:20px; border-bottom:1px solid rgba(248,248,242,0.12); padding-bottom:10px; }}
+        h1, h2, h3, h4 {{ color:#f8f8f2; margin-top:20px; margin-bottom:8px; font-weight:600; }}
+        h1 {{ color:#f92672; }}
+        h2 {{ color:#fd971f; }}
+        h3 {{ color:#66d9ef; }}
+        table {{ border-collapse:collapse; width:100%; margin:16px 0; background:#1e1f1c; border-radius:6px; overflow:hidden; font-size:13px; }}
+        th, td {{ padding:8px 12px; border:1px solid rgba(248,248,242,0.12); text-align:left; }}
+        th {{ background:rgba(102,217,239,0.12); color:#66d9ef; font-weight:600; }}
+        blockquote {{ border-left:3px solid #66d9ef; padding-left:14px; color:#8f908a; font-style:italic; }}
     </style>
 </head>
 <body>
-    <div style="border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px; margin-bottom:20px; font-size:16px; font-weight:700; color:#38bdf8;">
-        📄 {html.escape(decoded_filename)}
-    </div>
-    {html_body}
+    <div class="header">📄 {html.escape(decoded_filename)}</div>
+    <div>{html_body}</div>
 </body>
 </html>""")
         except Exception as e:
-            return HTMLResponse(f"<div style='color:#ef4444; padding:20px; font-family:sans-serif;'>❌ Ошибка рендеринга DOCX: {html.escape(str(e))}</div>")
+            return HTMLResponse(f"<div style='color:#f92672; padding:20px;'>❌ Ошибка рендеринга DOCX: {html.escape(str(e))}</div>", status_code=500)
 
     # 4. Fallback text / raw renderer
     try:
@@ -555,7 +558,7 @@ def get_db_stats():
         "hardware": {
             "gpu": "NVIDIA RTX A6000 (48 GB VRAM)",
             "ram": "128 GB DDR5",
-            "host": "gpu-compute-node (localhost)",
+            "host": "c14753 (localhost)",
             "privacy": "100% On-Premise"
         }
     }

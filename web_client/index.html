@@ -13,15 +13,21 @@
     <!-- Markdown Parser -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
-        :root {
-            --bg-primary: #0f172a;
-            --bg-card: rgba(30, 41, 59, 0.7);
-            --bg-card-hover: rgba(51, 65, 85, 0.8);
-            --accent-glow: #38bdf8;
-            --accent-purple: #818cf8;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --border-color: rgba(255, 255, 255, 0.1);
+                :root {
+            --bg-primary: #272822;
+            --bg-card: rgba(39, 40, 34, 0.88);
+            --bg-card-hover: rgba(62, 61, 50, 0.95);
+            --bg-darker: #1e1f1c;
+            --accent-glow: #66d9ef;
+            --accent-pink: #f92672;
+            --accent-green: #a6e22e;
+            --accent-yellow: #e6db74;
+            --accent-orange: #fd971f;
+            --accent-purple: #ae81ff;
+            --text-main: #f8f8f2;
+            --text-muted: #8f908a;
+            --border-color: rgba(248, 248, 242, 0.12);
+            --border-highlight: rgba(248, 248, 242, 0.25);
             --font-family: 'Inter', system-ui, -apple-system, sans-serif;
             --font-heading: 'Outfit', system-ui, sans-serif;
         }
@@ -34,7 +40,7 @@
 
         body {
             font-family: var(--font-family);
-            background: radial-gradient(circle at 15% 15%, #1e1b4b 0%, #0f172a 50%, #020617 100%);
+            background: radial-gradient(circle at 15% 15%, #3e3d32 0%, #272822 45%, #1e1f1c 100%);
             color: var(--text-main);
             min-height: 100vh;
             display: flex;
@@ -43,7 +49,7 @@
 
         header {
             padding: 20px 40px;
-            background: rgba(15, 23, 42, 0.8);
+            background: rgba(30, 31, 28, 0.92);
             backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border-color);
             display: flex;
@@ -100,7 +106,7 @@
             font-size: 22px;
             font-weight: 700;
             letter-spacing: -0.5px;
-            background: linear-gradient(90deg, #f8fafc, #fcd34d, #f97316);
+            background: linear-gradient(90deg, #f8fafc, #e6db74, #f97316);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             display: flex;
@@ -111,7 +117,7 @@
         .status-badge {
             background: rgba(34, 197, 94, 0.15);
             border: 1px solid rgba(34, 197, 94, 0.3);
-            color: #4ade80;
+            color: #a6e22e;
             padding: 6px 14px;
             border-radius: 20px;
             font-size: 13px;
@@ -124,9 +130,9 @@
         .status-dot {
             width: 8px;
             height: 8px;
-            background: #4ade80;
+            background: #a6e22e;
             border-radius: 50%;
-            box-shadow: 0 0 8px #4ade80;
+            box-shadow: 0 0 8px #a6e22e;
         }
 
         main {
@@ -183,17 +189,19 @@
 
         .message.user {
             align-self: flex-end;
-            background: linear-gradient(135deg, #0284c7, #2563eb);
-            color: white;
+            background: linear-gradient(135deg, #f92672, #fd971f);
+            color: #ffffff;
             border-bottom-right-radius: 4px;
+            box-shadow: 0 4px 14px rgba(249, 38, 114, 0.25);
         }
 
         .message.assistant {
             align-self: flex-start;
-            background: rgba(30, 41, 59, 0.9);
+            background: rgba(39, 40, 34, 0.95);
             border: 1px solid var(--border-color);
             color: var(--text-main);
             border-bottom-left-radius: 4px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
         }
 
         /* Markdown Elements Formatting */
@@ -210,8 +218,8 @@
 
         .message.assistant h3 {
             font-size: 16px;
-            color: #7dd3fc;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            color: #66d9ef;
+            border-bottom: 1px solid rgba(248, 248, 242, 0.1);
             padding-bottom: 4px;
         }
 
@@ -251,8 +259,8 @@
         }
 
         .message.assistant th {
-            background: rgba(56, 189, 248, 0.15);
-            color: #38bdf8;
+            background: rgba(102, 217, 239, 0.12);
+            color: #66d9ef;
             font-weight: 600;
         }
 
@@ -261,10 +269,11 @@
         }
 
         .message.assistant code {
-            background: rgba(0, 0, 0, 0.35);
-            color: #38bdf8;
+            background: #1e1f1c;
+            color: #a6e22e;
             padding: 2px 6px;
             border-radius: 4px;
+            border: 1px solid rgba(248, 248, 242, 0.08);
             font-family: Consolas, Monaco, monospace;
             font-size: 13px;
         }
@@ -283,7 +292,7 @@
         }
 
         .message.assistant blockquote {
-            border-left: 3px solid #38bdf8;
+            border-left: 3px solid #66d9ef;
             padding-left: 12px;
             margin: 8px 0;
             color: var(--text-muted);
@@ -312,7 +321,7 @@
         }
 
         .progress-label {
-            color: #fcd34d;
+            color: #e6db74;
             font-weight: 500;
             display: flex;
             align-items: center;
@@ -338,7 +347,7 @@
         .progress-fill {
             height: 100%;
             width: 10%;
-            background: linear-gradient(90deg, #f59e0b, #38bdf8);
+            background: linear-gradient(90deg, #fd971f, #66d9ef);
             border-radius: 3px;
             transition: width 0.35s ease-in-out;
             box-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
@@ -348,16 +357,15 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            background: rgba(56, 189, 248, 0.15);
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            color: var(--accent-glow);
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 12px;
-            margin-top: 10px;
-            margin-right: 6px;
+            background: rgba(102, 217, 239, 0.1);
+            border: 1px solid rgba(102, 217, 239, 0.25);
+            color: #66d9ef;
+            padding: 5px 12px;
+            border-radius: 8px;
+            margin: 4px 6px 4px 0;
             text-decoration: none;
-            transition: all 0.2s;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .source-tags {
@@ -372,9 +380,9 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            background: rgba(56, 189, 248, 0.12);
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            color: #7dd3fc;
+            background: rgba(102, 217, 239, 0.1);
+            border: 1px solid rgba(102, 217, 239, 0.25);
+            color: #66d9ef;
             padding: 5px 12px;
             border-radius: 8px;
             margin: 4px 6px 4px 0;
@@ -385,7 +393,7 @@
 
         .source-tag:hover {
             background: rgba(56, 189, 248, 0.25);
-            border-color: #38bdf8;
+            border-color: #66d9ef;
             color: #ffffff;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25);
@@ -396,9 +404,9 @@
             display: inline-flex;
             align-items: center;
             gap: 4px;
-            background: rgba(56, 189, 248, 0.16);
-            color: #38bdf8;
-            border: 1px solid rgba(56, 189, 248, 0.45);
+            background: rgba(102, 217, 239, 0.14);
+            color: #66d9ef;
+            border: 1px solid rgba(102, 217, 239, 0.4);
             padding: 2px 9px;
             border-radius: 6px;
             font-size: 12px;
@@ -411,10 +419,10 @@
         }
 
         .inline-citation-badge:hover {
-            background: rgba(56, 189, 248, 0.35);
-            border-color: #7dd3fc;
+            background: rgba(102, 217, 239, 0.28);
+            border-color: #a6e22e;
             color: #ffffff;
-            box-shadow: 0 0 12px rgba(56, 189, 248, 0.5);
+            box-shadow: 0 0 12px rgba(102, 217, 239, 0.5);
             transform: translateY(-1px);
         }
 
@@ -425,7 +433,7 @@
             gap: 8px;
             background: rgba(34, 197, 94, 0.12);
             border: 1px solid rgba(34, 197, 94, 0.35);
-            color: #4ade80;
+            color: #a6e22e;
             padding: 6px 12px;
             border-radius: 8px;
             font-size: 12px;
@@ -447,7 +455,7 @@
             gap: 6px;
             background: rgba(129, 140, 248, 0.12);
             border: 1px solid rgba(129, 140, 248, 0.3);
-            color: #a5b4fc;
+            color: #ae81ff;
             padding: 4px 10px;
             border-radius: 6px;
             font-size: 11px;
@@ -469,7 +477,7 @@
         .suggestions-title {
             font-size: 12px;
             font-weight: 600;
-            color: #fcd34d;
+            color: #e6db74;
             display: flex;
             align-items: center;
             gap: 6px;
@@ -498,8 +506,8 @@
 
         .suggestion-chip:hover {
             background: rgba(56, 189, 248, 0.2);
-            border-color: #38bdf8;
-            color: #38bdf8;
+            border-color: #66d9ef;
+            color: #66d9ef;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25);
         }
@@ -534,7 +542,7 @@
         .clarifier-title {
             font-size: 13px;
             font-weight: 600;
-            color: #fbbf24;
+            color: #e6db74;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -560,7 +568,7 @@
 
         .clarifier-question-box {
             background: rgba(30, 41, 59, 0.7);
-            border-left: 3px solid #f59e0b;
+            border-left: 3px solid #fd971f;
             padding: 10px 14px;
             border-radius: 6px;
             font-size: 14px;
@@ -592,7 +600,7 @@
 
         .clarifier-opt-card:hover {
             background: rgba(56, 189, 248, 0.15);
-            border-color: #38bdf8;
+            border-color: #66d9ef;
             transform: translateY(-2px);
             box-shadow: 0 4px 14px rgba(56, 189, 248, 0.2);
         }
@@ -607,7 +615,7 @@
         }
 
         .clarifier-opt-card:hover .clarifier-opt-label {
-            color: #38bdf8;
+            color: #66d9ef;
         }
 
         .clarifier-opt-preview {
@@ -623,7 +631,7 @@
         .clarify-btn {
             background: rgba(30, 41, 59, 0.85) !important;
             border: 1px solid rgba(245, 158, 11, 0.4) !important;
-            color: #fbbf24 !important;
+            color: #e6db74 !important;
             padding: 0 16px !important;
             display: inline-flex;
             align-items: center;
@@ -637,7 +645,7 @@
 
         .clarify-btn:hover {
             background: rgba(245, 158, 11, 0.2) !important;
-            border-color: #fbbf24 !important;
+            border-color: #e6db74 !important;
             box-shadow: 0 0 12px rgba(245, 158, 11, 0.25);
         }
 
@@ -671,7 +679,7 @@
         }
 
         .input-bar button {
-            background: linear-gradient(135deg, #f59e0b, #ea580c);
+            background: linear-gradient(135deg, #fd971f, #ea580c);
             color: #ffffff;
             border: none;
             padding: 0 24px;
@@ -692,7 +700,7 @@
             gap: 8px;
             background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(245, 158, 11, 0.25));
             border: 1px solid rgba(56, 189, 248, 0.4);
-            color: #38bdf8;
+            color: #66d9ef;
             padding: 8px 16px;
             border-radius: 10px;
             font-size: 13px;
@@ -704,7 +712,7 @@
 
         .graph-btn:hover {
             background: linear-gradient(135deg, rgba(56, 189, 248, 0.35), rgba(245, 158, 11, 0.4));
-            border-color: #38bdf8;
+            border-color: #66d9ef;
             color: #ffffff;
             box-shadow: 0 0 18px rgba(56, 189, 248, 0.4);
             transform: translateY(-1px);
@@ -740,8 +748,8 @@
         }
 
         .graph-modal-header {
-            padding: 16px 24px;
-            background: rgba(30, 41, 59, 0.7);
+            padding: 20px 40px;
+            background: rgba(30, 31, 28, 0.92);
             border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
@@ -772,7 +780,7 @@
 
         .graph-toolbar {
             padding: 10px 24px;
-            background: rgba(15, 23, 42, 0.95);
+            background: rgba(39, 40, 34, 0.98);
             border-bottom: 1px solid var(--border-color);
             display: flex;
             flex-wrap: wrap;
@@ -807,8 +815,8 @@
         .graph-tooltip {
             position: absolute;
             display: none;
-            background: rgba(15, 23, 42, 0.95);
-            border: 1px solid #38bdf8;
+            background: rgba(39, 40, 34, 0.98);
+            border: 1px solid #66d9ef;
             box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
             border-radius: 10px;
             padding: 12px 16px;
@@ -912,14 +920,14 @@
                 <svg class="kerosene-lamp-svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <defs>
                         <linearGradient id="metalGrad" x1="0" y1="0" x2="1" y2="1">
-                            <stop offset="0%" stop-color="#fbbf24" />
+                            <stop offset="0%" stop-color="#e6db74" />
                             <stop offset="50%" stop-color="#b45309" />
                             <stop offset="100%" stop-color="#78350f" />
                         </linearGradient>
                         <radialGradient id="flameGlow" cx="50%" cy="50%" r="50%">
                             <stop offset="0%" stop-color="#ffffff" />
                             <stop offset="35%" stop-color="#fef08a" />
-                            <stop offset="70%" stop-color="#f59e0b" />
+                            <stop offset="70%" stop-color="#fd971f" />
                             <stop offset="100%" stop-color="#ea580c" />
                         </radialGradient>
                         <linearGradient id="glassGrad" x1="0" y1="0" x2="0" y2="1">
@@ -931,10 +939,10 @@
                     <path d="M 20 22 C 20 6, 44 6, 44 22" stroke="#d97706" stroke-width="2.5" stroke-linecap="round"
                         fill="none" />
                     <!-- Top Ring -->
-                    <circle cx="32" cy="11" r="3" stroke="#fbbf24" stroke-width="2" fill="none" />
+                    <circle cx="32" cy="11" r="3" stroke="#e6db74" stroke-width="2" fill="none" />
                     <!-- Top Cap / Chimney Hood -->
                     <path d="M 26 18 L 38 18 L 36 14 L 28 14 Z" fill="url(#metalGrad)" />
-                    <ellipse cx="32" cy="18" rx="7" ry="2.5" fill="#fbbf24" />
+                    <ellipse cx="32" cy="18" rx="7" ry="2.5" fill="#e6db74" />
                     <!-- Side Tubes / Wire Cage -->
                     <path d="M 25 18 C 17 24, 17 40, 24 45" stroke="url(#metalGrad)" stroke-width="2.5"
                         stroke-linecap="round" fill="none" />
@@ -947,7 +955,7 @@
                     <path d="M 27 24 C 25 28, 25 35, 27 39" stroke="rgba(255,255,255,0.6)" stroke-width="1.2"
                         stroke-linecap="round" fill="none" />
                     <!-- Glowing Flame -->
-                    <circle cx="32" cy="33" r="7" fill="#fbbf24" opacity="0.35" />
+                    <circle cx="32" cy="33" r="7" fill="#e6db74" opacity="0.35" />
                     <path
                         d="M 32 26 C 30 29, 29 32, 29 34 C 29 36, 30.5 37.5, 32 37.5 C 33.5 37.5, 35 36, 35 34 C 35 32, 34 29, 32 26 Z"
                         fill="url(#flameGlow)" />
@@ -957,13 +965,13 @@
                         fill="#ffffff" />
                     <!-- Burner Collar -->
                     <rect x="25" y="43" width="14" height="4" rx="1.5" fill="url(#metalGrad)" />
-                    <rect x="39" y="44" width="3" height="2" rx="0.5" fill="#fbbf24" />
+                    <rect x="39" y="44" width="3" height="2" rx="0.5" fill="#e6db74" />
                     <!-- Base Fuel Tank -->
                     <path
                         d="M 22 47 L 42 47 C 45 47, 47 50, 46 54 L 45 56 C 45 57.5, 43 58, 41 58 L 23 58 C 21 58, 19 57.5, 19 56 L 18 54 C 17 50, 19 47, 22 47 Z"
                         fill="url(#metalGrad)" />
                     <ellipse cx="32" cy="47" rx="10" ry="2" fill="#d97706" />
-                    <ellipse cx="32" cy="57" rx="13" ry="2.5" fill="#78350f" stroke="#fbbf24" stroke-width="1" />
+                    <ellipse cx="32" cy="57" rx="13" ry="2.5" fill="#78350f" stroke="#e6db74" stroke-width="1" />
                 </svg>
             </div>
             <div>
@@ -972,9 +980,9 @@
                     <svg class="inline-lamp-svg" viewBox="0 0 64 64" fill="none">
                         <path d="M 20 22 C 20 6, 44 6, 44 22" stroke="#d97706" stroke-width="2.5" stroke-linecap="round"
                             fill="none" />
-                        <circle cx="32" cy="11" r="3" stroke="#fbbf24" stroke-width="2" fill="none" />
+                        <circle cx="32" cy="11" r="3" stroke="#e6db74" stroke-width="2" fill="none" />
                         <path d="M 26 18 L 38 18 L 36 14 L 28 14 Z" fill="#b45309" />
-                        <ellipse cx="32" cy="18" rx="7" ry="2.5" fill="#fbbf24" />
+                        <ellipse cx="32" cy="18" rx="7" ry="2.5" fill="#e6db74" />
                         <path d="M 25 18 C 17 24, 17 40, 24 45" stroke="#b45309" stroke-width="2.5"
                             stroke-linecap="round" fill="none" />
                         <path d="M 39 18 C 47 24, 47 40, 40 45" stroke="#b45309" stroke-width="2.5"
@@ -983,12 +991,12 @@
                             fill="rgba(251,191,36,0.2)" stroke="rgba(255,255,255,0.4)" stroke-width="1" />
                         <path
                             d="M 32 26 C 30 29, 29 32, 29 34 C 29 36, 30.5 37.5, 32 37.5 C 33.5 37.5, 35 36, 35 34 C 35 32, 34 29, 32 26 Z"
-                            fill="#f59e0b" />
+                            fill="#fd971f" />
                         <rect x="25" y="43" width="14" height="4" rx="1.5" fill="#b45309" />
                         <path
                             d="M 22 47 L 42 47 C 45 47, 47 50, 46 54 L 45 56 C 45 57.5, 43 58, 41 58 L 23 58 C 21 58, 19 57.5, 19 56 L 18 54 C 17 50, 19 47, 22 47 Z"
                             fill="#b45309" />
-                        <ellipse cx="32" cy="57" rx="13" ry="2.5" fill="#78350f" stroke="#fbbf24" stroke-width="1" />
+                        <ellipse cx="32" cy="57" rx="13" ry="2.5" fill="#78350f" stroke="#e6db74" stroke-width="1" />
                     </svg>
                 </div>
                 <div style="font-size: 12px; color: var(--text-muted);">Инженерная RAG-Система ОИиР (Strict Citations & Zero Gaslighting)</div>
@@ -996,7 +1004,7 @@
         </div>
         <div class="status-badge">
             <div class="status-dot"></div>
-            Сервер gpu-compute-node (RTX A6000 48GB)
+            Сервер c14753 (RTX A6000 48GB)
         </div>
     </header>
 
@@ -1052,7 +1060,7 @@
                     <div style="font-size: 12px; color: var(--text-muted);">Нажмите для выбора файла</div>
                     <input type="file" id="fileInput" onchange="uploadDocument(event)">
                 </div>
-                <div id="uploadStatus" style="font-size: 12px; margin-top: 10px; color: #4ade80;"></div>
+                <div id="uploadStatus" style="font-size: 12px; margin-top: 10px; color: #a6e22e;"></div>
             </div>
 
             <div class="panel-card">
@@ -1060,20 +1068,20 @@
                 <button class="graph-btn" style="width: 100%; justify-content: center; padding: 10px; margin-bottom: 8px;" onclick="openGraphModal()">
                     🌌 3D Карта Базы Знаний
                 </button>
-                <button class="graph-btn" style="width: 100%; justify-content: center; padding: 10px; background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(56, 189, 248, 0.25)); border-color: rgba(34, 197, 94, 0.4); color: #4ade80;" onclick="openStatsModal()">
+                <button class="graph-btn" style="width: 100%; justify-content: center; padding: 10px; background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(56, 189, 248, 0.25)); border-color: rgba(34, 197, 94, 0.4); color: #a6e22e;" onclick="openStatsModal()">
                     📊 Дашборд Статистики БД
                 </button>
             </div>
 
             <div class="panel-card">
-                <div class="panel-title">⚡ Инфраструктура gpu-compute-node</div>
+                <div class="panel-title">⚡ Инфраструктура c14753</div>
                 <div class="system-info">
                     <div class="info-row"><span>GPU:</span> <span>RTX A6000 (48GB VRAM)</span></div>
                     <div class="info-row"><span>RAM:</span> <span>128 GB DDR5</span></div>
                     <div class="info-row"><span>Векторные эмбеддинги:</span> <span>BGE-M3 (1024-dim)</span></div>
                     <div class="info-row"><span>Векторная БД:</span> <span>Qdrant (32 772 точки)</span></div>
                     <div class="info-row"><span>Нейро-Реранкер:</span> <span>FlashRank Cross-Encoder</span></div>
-                    <div class="info-row"><span>LLM-Судья (Fact-Check):</span> <span style="color:#4ade80; font-weight:600;">Qwen 3.6 35B (NLI)</span></div>
+                    <div class="info-row"><span>LLM-Судья (Fact-Check):</span> <span style="color:#a6e22e; font-weight:600;">Qwen 3.6 35B (NLI)</span></div>
                     <div class="info-row"><span>Конфиденциальность:</span> <span>100% On-Premise</span></div>
                 </div>
             </div>
@@ -1185,7 +1193,7 @@
             questionText.innerText = '✅ Запрос уже достаточно конкретен: ' + (data.clarifying_question || 'готов к прямому поиску.');
             grid.innerHTML = `
                 <div class="clarifier-opt-card" style="border-color: rgba(34, 197, 94, 0.4); background: rgba(34, 197, 94, 0.08);" onclick="closeClarifier(); sendQuery();">
-                    <div class="clarifier-opt-label" style="color: #4ade80;"><span>🚀 Запустить прямой поиск по базе</span> <span>➔</span></div>
+                    <div class="clarifier-opt-label" style="color: #a6e22e;"><span>🚀 Запустить прямой поиск по базе</span> <span>➔</span></div>
                     <div class="clarifier-opt-preview">Запрос содержит точные критерии. Нажмите для немедленного поиска.</div>
                 </div>
             `;
@@ -1501,8 +1509,8 @@
 
         function getCategoryColor(docType) {
             const dt = (docType || '').toLowerCase();
-            if (dt.includes('bom') || dt.includes('ведомость')) return '#22c55e'; // Green
-            if (dt.includes('gost') || dt.includes('гост') || dt.includes('iso')) return '#38bdf8'; // Cyan/Blue
+            if (dt.includes('bom') || dt.includes('ведомость')) return '#a6e22e'; // Green
+            if (dt.includes('gost') || dt.includes('гост') || dt.includes('iso')) return '#66d9ef'; // Cyan/Blue
             if (dt.includes('dfmea') || dt.includes('fmea') || dt.includes('риск')) return '#f97316'; // Orange
             if (dt.includes('газпром') || dt.includes('сто')) return '#a855f7'; // Purple
             if (dt.includes('дефект') || dt.includes('акт') || dt.includes('отчет')) return '#eab308'; // Yellow
@@ -1549,8 +1557,8 @@
         function toggleAutoRotate() {
             autoRotate = !autoRotate;
             const btn = document.getElementById('autoRotateBtn');
-            btn.style.borderColor = autoRotate ? '#38bdf8' : 'var(--border-color)';
-            btn.style.color = autoRotate ? '#38bdf8' : 'var(--text-muted)';
+            btn.style.borderColor = autoRotate ? '#66d9ef' : 'var(--border-color)';
+            btn.style.color = autoRotate ? '#66d9ef' : 'var(--text-muted)';
         }
 
         function toggleGuide() {
@@ -1647,8 +1655,8 @@
                     tooltip.style.left = `${found.sx + 14}px`;
                     tooltip.style.top = `${found.sy + 14}px`;
                     tooltip.innerHTML = `
-                        <div style="font-weight:600; color:#38bdf8; margin-bottom:4px;">📄 ${found.node.source}</div>
-                        <div style="color:#fcd34d; font-size:11px; margin-bottom:6px;">Тип: ${found.node.doc_type} | Стр/Лист: ${found.node.page}</div>
+                        <div style="font-weight:600; color:#66d9ef; margin-bottom:4px;">📄 ${found.node.source}</div>
+                        <div style="color:#e6db74; font-size:11px; margin-bottom:6px;">Тип: ${found.node.doc_type} | Стр/Лист: ${found.node.page}</div>
                         <div style="color:#cbd5e1; font-size:11px; line-height:1.4;">${found.node.preview}...</div>
                     `;
                 } else {
@@ -1745,8 +1753,8 @@
                 ctx.arc(p.sx, p.sy, radius, 0, Math.PI * 2);
 
                 if (isMatch) {
-                    ctx.fillStyle = '#fbbf24';
-                    ctx.shadowColor = '#fbbf24';
+                    ctx.fillStyle = '#e6db74';
+                    ctx.shadowColor = '#e6db74';
                     ctx.shadowBlur = 18;
                 } else if (isHovered) {
                     ctx.fillStyle = '#ffffff';
@@ -1807,10 +1815,10 @@
             // Tab bar HTML
             const tabBarHtml = `
                 <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:12px;">
-                    <button class="graph-btn" style="padding:8px 18px; font-size:13px; font-weight:600; ${currentStatsTab === 'registry' ? 'background:#38bdf8; color:#0f172a; border-color:#38bdf8;' : 'color:#94a3b8;'}" onclick="switchStatsTab('registry')">
+                    <button class="graph-btn" style="padding:8px 18px; font-size:13px; font-weight:600; ${currentStatsTab === 'registry' ? 'background:#f92672; color:#ffffff; border-color:#f92672; box-shadow:0 0 14px rgba(249,38,114,0.4);' : 'color:#8f908a; background:rgba(39,40,34,0.6); border-color:rgba(248,248,242,0.1);'}" onclick="switchStatsTab('registry')">
                         📂 Реестр Базы Знаний & Документы
                     </button>
-                    <button class="graph-btn" style="padding:8px 18px; font-size:13px; font-weight:600; ${currentStatsTab === 'analytics' ? 'background:#38bdf8; color:#0f172a; border-color:#38bdf8;' : 'color:#94a3b8;'}" onclick="switchStatsTab('analytics')">
+                    <button class="graph-btn" style="padding:8px 18px; font-size:13px; font-weight:600; ${currentStatsTab === 'analytics' ? 'background:#f92672; color:#ffffff; border-color:#f92672; box-shadow:0 0 14px rgba(249,38,114,0.4);' : 'color:#8f908a; background:rgba(39,40,34,0.6); border-color:rgba(248,248,242,0.1);'}" onclick="switchStatsTab('analytics')">
                         📊 UX Аналитика & Пользовательский Опыт
                     </button>
                 </div>
@@ -1826,9 +1834,9 @@
                     const shortDate = h.date.split('-').slice(1).join('.');
                     return `
                         <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; min-width:42px;">
-                            <span style="font-size:11px; font-weight:700; color:#38bdf8;">${h.count}</span>
-                            <div style="width:100%; height:110px; background:rgba(15,23,42,0.8); border-radius:6px; display:flex; align-items:flex-end; padding:2px; border:1px solid rgba(56,189,248,0.2);">
-                                <div style="width:100%; height:${pct}%; background:linear-gradient(to top, #0284c7, #38bdf8); border-radius:4px; box-shadow:0 0 8px rgba(56,189,248,0.4);" title="${h.date}: ${h.count} запросов (ср. ${h.avg_ms} мс)"></div>
+                            <span style="font-size:11px; font-weight:700; color:#66d9ef;">${h.count}</span>
+                            <div style="width:100%; height:110px; background:#1e1f1c; border-radius:6px; display:flex; align-items:flex-end; padding:2px; border:1px solid rgba(56,189,248,0.2);">
+                                <div style="width:100%; height:${pct}%; background:linear-gradient(to top, #f92672, #fd971f); border-radius:4px; box-shadow:0 0 8px rgba(56,189,248,0.4);" title="${h.date}: ${h.count} запросов (ср. ${h.avg_ms} мс)"></div>
                             </div>
                             <span style="font-size:10px; color:var(--text-muted);">${shortDate}</span>
                         </div>
@@ -1842,9 +1850,9 @@
                     const shortDate = h.date.split('-').slice(1).join('.');
                     return `
                         <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; min-width:42px;">
-                            <span style="font-size:11px; font-weight:700; color:#4ade80;">${h.count}</span>
-                            <div style="width:100%; height:110px; background:rgba(15,23,42,0.8); border-radius:6px; display:flex; align-items:flex-end; padding:2px; border:1px solid rgba(74,222,128,0.2);">
-                                <div style="width:100%; height:${pct}%; background:linear-gradient(to top, #16a34a, #4ade80); border-radius:4px; box-shadow:0 0 8px rgba(74,222,128,0.4);" title="${h.date}: ${h.count} документов (${h.chunks} чанков)"></div>
+                            <span style="font-size:11px; font-weight:700; color:#a6e22e;">${h.count}</span>
+                            <div style="width:100%; height:110px; background:#1e1f1c; border-radius:6px; display:flex; align-items:flex-end; padding:2px; border:1px solid rgba(74,222,128,0.2);">
+                                <div style="width:100%; height:${pct}%; background:linear-gradient(to top, #66d9ef, #a6e22e); border-radius:4px; box-shadow:0 0 8px rgba(74,222,128,0.4);" title="${h.date}: ${h.count} документов (${h.chunks} чанков)"></div>
                             </div>
                             <span style="font-size:10px; color:var(--text-muted);">${shortDate}</span>
                         </div>
@@ -1856,8 +1864,8 @@
                         <td style="padding:8px 12px; font-weight:600; color:#f8fafc;">
                             ${i === 0 ? '🥇' : (i === 1 ? '🥈' : '🥉')} ${u.user}
                         </td>
-                        <td style="padding:8px 12px; font-weight:600; color:#4ade80;">${u.files} документов</td>
-                        <td style="padding:8px 12px; color:#fcd34d; font-family:Consolas,monospace;">${u.mb} MB</td>
+                        <td style="padding:8px 12px; font-weight:600; color:#a6e22e;">${u.files} документов</td>
+                        <td style="padding:8px 12px; color:#e6db74; font-family:Consolas,monospace;">${u.mb} MB</td>
                         <td style="padding:8px 12px; color:var(--text-muted);">${u.chunks.toLocaleString()} чанков</td>
                     </tr>
                 `).join('');
@@ -1867,8 +1875,8 @@
                         <td style="padding:8px 12px; font-weight:600; color:#f8fafc;">
                             ${i === 0 ? '🥇' : (i === 1 ? '🥈' : '🥉')} ${a.user}
                         </td>
-                        <td style="padding:8px 12px; font-weight:600; color:#38bdf8;">${a.queries} запросов</td>
-                        <td style="padding:8px 12px; color:#fbbf24;">⚡ ${a.avg_latency_sec} с</td>
+                        <td style="padding:8px 12px; font-weight:600; color:#66d9ef;">${a.queries} запросов</td>
+                        <td style="padding:8px 12px; color:#e6db74;">⚡ ${a.avg_latency_sec} с</td>
                         <td style="padding:8px 12px; color:var(--text-muted); font-size:11px;">🟢 Активен</td>
                     </tr>
                 `).join('');
@@ -1877,38 +1885,38 @@
                     ${tabBarHtml}
                     <!-- KPI Cards Row -->
                     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:14px; margin-bottom:24px;">
-                        <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(56,189,248,0.35); border-radius:12px; padding:14px;">
+                        <div style="background:rgba(39,40,34,0.9); border:1px solid rgba(56,189,248,0.35); border-radius:12px; padding:14px;">
                             <div style="font-size:11px; color:var(--text-muted);">💬 Всего Запросов (Sum of Queries)</div>
-                            <div style="font-size:24px; font-weight:700; color:#38bdf8; margin-top:4px;">${(kpis.total_queries || 0).toLocaleString()}</div>
-                            <div style="font-size:11px; color:#4ade80; margin-top:4px;">📈 Высокая активность</div>
+                            <div style="font-size:24px; font-weight:700; color:#66d9ef; margin-top:4px;">${(kpis.total_queries || 0).toLocaleString()}</div>
+                            <div style="font-size:11px; color:#a6e22e; margin-top:4px;">📈 Высокая активность</div>
                         </div>
-                        <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(245,158,11,0.35); border-radius:12px; padding:14px;">
+                        <div style="background:rgba(39,40,34,0.9); border:1px solid rgba(245,158,11,0.35); border-radius:12px; padding:14px;">
                             <div style="font-size:11px; color:var(--text-muted);">⚡ Средняя Задержка (Mean Latency)</div>
-                            <div style="font-size:24px; font-weight:700; color:#fbbf24; margin-top:4px;">${kpis.mean_latency_sec || 1.35} с</div>
+                            <div style="font-size:24px; font-weight:700; color:#e6db74; margin-top:4px;">${kpis.mean_latency_sec || 1.35} с</div>
                             <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">🔍 Поиск HNSW: <b>${kpis.mean_retrieval_ms || 18} мс</b></div>
                         </div>
-                        <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(129,140,248,0.35); border-radius:12px; padding:14px;">
+                        <div style="background:rgba(39,40,34,0.9); border:1px solid rgba(129,140,248,0.35); border-radius:12px; padding:14px;">
                             <div style="font-size:11px; color:var(--text-muted);">💡 Топ Вопрошающий (Top Asker)</div>
-                            <div style="font-size:14px; font-weight:700; color:#a5b4fc; margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${bestAsk.name}</div>
-                            <div style="font-size:11px; color:#38bdf8; margin-top:4px;">💬 <b>${bestAsk.query_count} запросов</b> (ср. ${bestAsk.avg_latency_sec} с)</div>
+                            <div style="font-size:14px; font-weight:700; color:#ae81ff; margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${bestAsk.name}</div>
+                            <div style="font-size:11px; color:#66d9ef; margin-top:4px;">💬 <b>${bestAsk.query_count} запросов</b> (ср. ${bestAsk.avg_latency_sec} с)</div>
                         </div>
-                        <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(34,197,94,0.35); border-radius:12px; padding:14px;">
+                        <div style="background:rgba(39,40,34,0.9); border:1px solid rgba(34,197,94,0.35); border-radius:12px; padding:14px;">
                             <div style="font-size:11px; color:var(--text-muted);">🏆 Лучший Загрузчик (Top Uploader)</div>
-                            <div style="font-size:14px; font-weight:700; color:#4ade80; margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${bestUp.name}</div>
-                            <div style="font-size:11px; color:#fcd34d; margin-top:4px;">📦 <b>${bestUp.uploads_count} файлов</b> (${bestUp.total_mb} MB)</div>
+                            <div style="font-size:14px; font-weight:700; color:#a6e22e; margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${bestUp.name}</div>
+                            <div style="font-size:11px; color:#e6db74; margin-top:4px;">📦 <b>${bestUp.uploads_count} файлов</b> (${bestUp.total_mb} MB)</div>
                         </div>
-                        <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(168,85,247,0.35); border-radius:12px; padding:14px;">
+                        <div style="background:rgba(39,40,34,0.9); border:1px solid rgba(168,85,247,0.35); border-radius:12px; padding:14px;">
                             <div style="font-size:11px; color:var(--text-muted);">🛡️ Коэффициент Верификации (Judge)</div>
-                            <div style="font-size:24px; font-weight:700; color:#c084fc; margin-top:4px;">${kpis.mean_grounding_ratio || 98.5}%</div>
-                            <div style="font-size:11px; color:#4ade80; margin-top:4px;">⚖️ 0% критических галлюцинаций</div>
+                            <div style="font-size:24px; font-weight:700; color:#ae81ff; margin-top:4px;">${kpis.mean_grounding_ratio || 98.5}%</div>
+                            <div style="font-size:11px; color:#a6e22e; margin-top:4px;">⚖️ 0% критических галлюцинаций</div>
                         </div>
                     </div>
 
                     <!-- Timelines Row -->
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:24px;">
                         <!-- Query History Chart -->
-                        <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(56,189,248,0.25); border-radius:12px; padding:18px;">
-                            <div style="font-size:14px; font-weight:600; color:#38bdf8; margin-bottom:14px; display:flex; align-items:center; gap:6px;">
+                        <div style="background:rgba(30,31,28,0.85); border:1px solid rgba(56,189,248,0.25); border-radius:12px; padding:18px;">
+                            <div style="font-size:14px; font-weight:600; color:#66d9ef; margin-bottom:14px; display:flex; align-items:center; gap:6px;">
                                 📈 Динамика Запросов по Дням (Queries / Day)
                             </div>
                             <div style="display:flex; align-items:flex-end; gap:8px; height:130px; padding:8px 0; overflow-x:auto;">
@@ -1917,8 +1925,8 @@
                         </div>
 
                         <!-- Upload History Chart -->
-                        <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(74,222,128,0.25); border-radius:12px; padding:18px;">
-                            <div style="font-size:14px; font-weight:600; color:#4ade80; margin-bottom:14px; display:flex; align-items:center; gap:6px;">
+                        <div style="background:rgba(30,31,28,0.85); border:1px solid rgba(74,222,128,0.25); border-radius:12px; padding:18px;">
+                            <div style="font-size:14px; font-weight:600; color:#a6e22e; margin-bottom:14px; display:flex; align-items:center; gap:6px;">
                                 📦 Динамика Загрузки Документов (Uploads / Day)
                             </div>
                             <div style="display:flex; align-items:flex-end; gap:8px; height:130px; padding:8px 0; overflow-x:auto;">
@@ -1930,14 +1938,14 @@
                     <!-- Side-by-Side Leaderboards -->
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:20px;">
                         <!-- Top Askers Table -->
-                        <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(56,189,248,0.25); border-radius:12px; padding:16px;">
-                            <div style="font-size:14px; font-weight:600; color:#38bdf8; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+                        <div style="background:rgba(30,31,28,0.85); border:1px solid rgba(56,189,248,0.25); border-radius:12px; padding:16px;">
+                            <div style="font-size:14px; font-weight:600; color:#66d9ef; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
                                 💬 Топ Инженеров по Запросам (Top Askers)
                             </div>
                             <div style="overflow-x:auto;">
                                 <table style="width:100%; border-collapse:collapse; text-align:left; font-size:12px;">
                                     <thead>
-                                        <tr style="background:rgba(30,41,59,0.8); color:var(--text-muted); border-bottom:1px solid var(--border-color);">
+                                        <tr style="background:rgba(62,61,50,0.85); color:var(--text-muted); border-bottom:1px solid var(--border-color);">
                                             <th style="padding:8px 10px;">Рабочая станция / IP</th>
                                             <th style="padding:8px 10px;">Запросов</th>
                                             <th style="padding:8px 10px;">Ср. Время</th>
@@ -1950,14 +1958,14 @@
                         </div>
 
                         <!-- Top Uploaders Table -->
-                        <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(74,222,128,0.25); border-radius:12px; padding:16px;">
-                            <div style="font-size:14px; font-weight:600; color:#4ade80; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+                        <div style="background:rgba(30,31,28,0.85); border:1px solid rgba(74,222,128,0.25); border-radius:12px; padding:16px;">
+                            <div style="font-size:14px; font-weight:600; color:#a6e22e; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
                                 📦 Топ Инженеров по Загрузкам (Top Uploaders)
                             </div>
                             <div style="overflow-x:auto;">
                                 <table style="width:100%; border-collapse:collapse; text-align:left; font-size:12px;">
                                     <thead>
-                                        <tr style="background:rgba(30,41,59,0.8); color:var(--text-muted); border-bottom:1px solid var(--border-color);">
+                                        <tr style="background:rgba(62,61,50,0.85); color:var(--text-muted); border-bottom:1px solid var(--border-color);">
                                             <th style="padding:8px 10px;">Рабочая станция / IP</th>
                                             <th style="padding:8px 10px;">Документов</th>
                                             <th style="padding:8px 10px;">Объем (MB)</th>
@@ -1974,19 +1982,19 @@
                 // Render Registry Tab
                 let rowsHtml = '';
                 (data.files || []).forEach(f => {
-                    let badgeColor = '#38bdf8';
-                    if (f.ext === 'XLSX') badgeColor = '#22c55e';
-                    else if (f.ext === 'DOCX') badgeColor = '#f59e0b';
+                    let badgeColor = '#66d9ef';
+                    if (f.ext === 'XLSX') badgeColor = '#a6e22e';
+                    else if (f.ext === 'DOCX') badgeColor = '#fd971f';
 
                     rowsHtml += `
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                             <td style="padding:10px 12px; font-weight:500;">
-                                <a href="${API_BASE}/api/documents/preview/${encodeURIComponent(f.name)}" onclick="event.preventDefault(); openDocumentViewer('${API_BASE}/api/documents/preview/${encodeURIComponent(f.name)}', '${f.name}')" style="color:#38bdf8; text-decoration:none; cursor:pointer;">📄 ${f.name}</a>
+                                <a href="${API_BASE}/api/documents/preview/${encodeURIComponent(f.name)}" onclick="event.preventDefault(); openDocumentViewer('${API_BASE}/api/documents/preview/${encodeURIComponent(f.name)}', '${f.name}')" style="color:#66d9ef; text-decoration:none; cursor:pointer;">📄 ${f.name}</a>
                             </td>
                             <td style="padding:10px 12px;"><span style="background:${badgeColor}22; border:1px solid ${badgeColor}55; color:${badgeColor}; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:600;">${f.ext}</span></td>
                             <td style="padding:10px 12px; color:var(--text-muted); font-size:12px;">${f.category}</td>
-                            <td style="padding:10px 12px; font-family:Consolas,monospace; color:#fcd34d;">${f.size_mb} MB</td>
-                            <td style="padding:10px 12px; color:#4ade80; font-size:12px;">🟢 Индексирован</td>
+                            <td style="padding:10px 12px; font-family:Consolas,monospace; color:#e6db74;">${f.size_mb} MB</td>
+                            <td style="padding:10px 12px; color:#a6e22e; font-size:12px;">🟢 Индексирован</td>
                         </tr>
                     `;
                 });
@@ -1994,35 +2002,35 @@
                 container.innerHTML = `
                     ${tabBarHtml}
                     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin-bottom:24px;">
-                        <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(56,189,248,0.3); border-radius:12px; padding:16px;">
+                        <div style="background:rgba(39,40,34,0.9); border:1px solid rgba(56,189,248,0.3); border-radius:12px; padding:16px;">
                             <div style="font-size:12px; color:var(--text-muted);">Векторных точек в Qdrant</div>
-                            <div style="font-size:24px; font-weight:700; color:#38bdf8; margin-top:4px;">${(data.total_points || 28475).toLocaleString()}</div>
-                            <div style="font-size:11px; color:#4ade80; margin-top:4px;">1024-dim BGE-M3 (Cosine)</div>
+                            <div style="font-size:24px; font-weight:700; color:#66d9ef; margin-top:4px;">${(data.total_points || 28475).toLocaleString()}</div>
+                            <div style="font-size:11px; color:#a6e22e; margin-top:4px;">1024-dim BGE-M3 (Cosine)</div>
                         </div>
-                        <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(245,158,11,0.3); border-radius:12px; padding:16px;">
+                        <div style="background:rgba(39,40,34,0.9); border:1px solid rgba(245,158,11,0.3); border-radius:12px; padding:16px;">
                             <div style="font-size:12px; color:var(--text-muted);">Объем Корпуса Документов</div>
-                            <div style="font-size:24px; font-weight:700; color:#fbbf24; margin-top:4px;">${data.total_raw_size_mb || 450} MB</div>
+                            <div style="font-size:24px; font-weight:700; color:#e6db74; margin-top:4px;">${data.total_raw_size_mb || 450} MB</div>
                             <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">${data.total_raw_size_gb || 0.45} GB на диске</div>
                         </div>
-                        <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(34,197,94,0.3); border-radius:12px; padding:16px;">
+                        <div style="background:rgba(39,40,34,0.9); border:1px solid rgba(34,197,94,0.3); border-radius:12px; padding:16px;">
                             <div style="font-size:12px; color:var(--text-muted);">Документов в Индексе</div>
-                            <div style="font-size:24px; font-weight:700; color:#4ade80; margin-top:4px;">${data.total_files || 18} файлов</div>
+                            <div style="font-size:24px; font-weight:700; color:#a6e22e; margin-top:4px;">${data.total_files || 18} файлов</div>
                             <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">PDF, XLSX, DOCX, TXT</div>
                         </div>
-                        <div style="background:rgba(30,41,59,0.7); border:1px solid rgba(168,85,247,0.3); border-radius:12px; padding:16px;">
+                        <div style="background:rgba(39,40,34,0.9); border:1px solid rgba(168,85,247,0.3); border-radius:12px; padding:16px;">
                             <div style="font-size:12px; color:var(--text-muted);">Аппаратная Платформа & Судья</div>
-                            <div style="font-size:15px; font-weight:700; color:#c084fc; margin-top:4px;">RTX A6000 (48GB)</div>
-                            <div style="font-size:11px; color:#4ade80; margin-top:4px;">⚖️ Судья: ${data.judge_model || 'Qwen 3.6 35B'}</div>
+                            <div style="font-size:15px; font-weight:700; color:#ae81ff; margin-top:4px;">RTX A6000 (48GB)</div>
+                            <div style="font-size:11px; color:#a6e22e; margin-top:4px;">⚖️ Судья: ${data.judge_model || 'Qwen 3.6 35B'}</div>
                         </div>
                     </div>
 
                     <div style="font-size:15px; font-weight:600; color:#ffffff; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
                         📂 Реестр Загруженных Документов & Первоисточников
                     </div>
-                    <div style="background:rgba(15,23,42,0.6); border:1px solid var(--border-color); border-radius:12px; overflow-x:auto;">
+                    <div style="background:rgba(30,31,28,0.85); border:1px solid var(--border-color); border-radius:12px; overflow-x:auto;">
                         <table style="width:100%; border-collapse:collapse; text-align:left; font-size:13px; min-width:600px;">
                             <thead>
-                                <tr style="background:rgba(30,41,59,0.8); color:var(--text-muted); font-size:12px; border-bottom:1px solid var(--border-color);">
+                                <tr style="background:rgba(62,61,50,0.85); color:var(--text-muted); font-size:12px; border-bottom:1px solid var(--border-color);">
                                     <th style="padding:10px 12px;">Файл стандарта / спецификации</th>
                                     <th style="padding:10px 12px;">Формат</th>
                                     <th style="padding:10px 12px;">Категория</th>
@@ -2110,11 +2118,11 @@
             </div>
             <div class="graph-toolbar">
                 <input type="text" class="graph-search-input" placeholder="🔍 Поиск по стандартам и тексту..." oninput="filterGraph(event)">
-                <button class="graph-btn" id="autoRotateBtn" style="padding:5px 12px; font-size:12px; border-color:#38bdf8; color:#38bdf8;" onclick="toggleAutoRotate()">🌌 Авто-вращение</button>
+                <button class="graph-btn" id="autoRotateBtn" style="padding:5px 12px; font-size:12px; border-color:#66d9ef; color:#66d9ef;" onclick="toggleAutoRotate()">🌌 Авто-вращение</button>
                 <button class="graph-btn" style="padding:5px 12px; font-size:12px;" onclick="resetGraphView()">🎯 Сброс Вида</button>
                 <div style="flex:1;"></div>
-                <div class="legend-pill"><span class="legend-dot" style="background:#38bdf8;"></span> ГОСТ/ISO</div>
-                <div class="legend-pill"><span class="legend-dot" style="background:#22c55e;"></span> BOM (Спецификации)</div>
+                <div class="legend-pill"><span class="legend-dot" style="background:#66d9ef;"></span> ГОСТ/ISO</div>
+                <div class="legend-pill"><span class="legend-dot" style="background:#a6e22e;"></span> BOM (Спецификации)</div>
                 <div class="legend-pill"><span class="legend-dot" style="background:#f97316;"></span> DFMEA (Риски)</div>
                 <div class="legend-pill"><span class="legend-dot" style="background:#a855f7;"></span> СТО Газпром</div>
                 <div class="legend-pill"><span class="legend-dot" style="background:#eab308;"></span> Акты & Протоколы</div>
@@ -2124,9 +2132,9 @@
                 <div id="graphTooltip" class="graph-tooltip"></div>
                 
                 <!-- INSTRUCTION GUIDE PANEL -->
-                <div id="graphGuidePanel" style="display:none; position:absolute; top:16px; right:16px; width:380px; max-height:80%; background:rgba(15,23,42,0.95); border:1px solid #38bdf8; border-radius:12px; padding:18px; color:#e2e8f0; font-size:12px; line-height:1.6; overflow-y:auto; box-shadow:0 0 25px rgba(0,0,0,0.8); z-index:1100; backdrop-filter:blur(10px);">
+                <div id="graphGuidePanel" style="display:none; position:absolute; top:16px; right:16px; width:380px; max-height:80%; background:rgba(15,23,42,0.95); border:1px solid #66d9ef; border-radius:12px; padding:18px; color:#e2e8f0; font-size:12px; line-height:1.6; overflow-y:auto; box-shadow:0 0 25px rgba(0,0,0,0.8); z-index:1100; backdrop-filter:blur(10px);">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid rgba(56,189,248,0.3); padding-bottom:6px;">
-                        <span style="font-weight:700; color:#38bdf8; font-size:14px;">📖 Как читать 3D-Граф Знаний</span>
+                        <span style="font-weight:700; color:#66d9ef; font-size:14px;">📖 Как читать 3D-Граф Знаний</span>
                         <button onclick="toggleGuide()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:16px;">&times;</button>
                     </div>
                     <p><b>1. Что такое светящиеся точки?</b><br>
@@ -2172,14 +2180,14 @@
     <div id="docViewerModal" class="graph-modal-backdrop" onclick="if(event.target===this) closeDocViewerModal()" style="display:none; z-index:9999;">
         <div class="graph-modal-content" style="width:92vw; height:92vh; padding:0; display:flex; flex-direction:column; background:#0f172a; border:1px solid rgba(56,189,248,0.3); box-shadow:0 0 40px rgba(0,0,0,0.85);">
             <div class="graph-modal-header" style="background:rgba(15,23,42,0.95); padding:14px 20px; border-bottom:1px solid rgba(255,255,255,0.1);">
-                <div id="docViewerTitle" class="graph-modal-title" style="font-size:15px; display:flex; align-items:center; gap:8px; color:#38bdf8;">
+                <div id="docViewerTitle" class="graph-modal-title" style="font-size:15px; display:flex; align-items:center; gap:8px; color:#66d9ef;">
                     📄 Просмотр документа
                 </div>
                 <div style="display:flex; align-items:center; gap:12px;">
                     <a id="docViewerNewTab" href="#" target="_blank" class="graph-btn" style="text-decoration:none; padding:6px 14px; font-size:12px; display:flex; align-items:center; gap:6px;">
                         ↗️ Открыть в новой вкладке
                     </a>
-                    <button class="graph-close-btn" onclick="closeDocViewerModal()" style="font-size:24px; color:#94a3b8; background:none; border:none; cursor:pointer;">&times;</button>
+                    <button class="graph-close-btn" onclick="closeDocViewerModal()" style="font-size:24px; color:#8f908a; background:rgba(39,40,34,0.6); border-color:rgba(248,248,242,0.1); background:none; border:none; cursor:pointer;">&times;</button>
                 </div>
             </div>
             <div style="flex:1; width:100%; height:100%; position:relative; background:#1e293b;">
