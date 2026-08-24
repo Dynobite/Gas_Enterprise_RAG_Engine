@@ -2174,27 +2174,39 @@
             }
         }
 
-        function renderParsedMarkdownView() {
+        async function loadFullMarkdown() {
+            const mdContainer = document.getElementById('docMarkdownContainer');
+            mdContainer.innerHTML = '<div style="text-align:center; padding:30px; color:#66d9ef;">⏳ Загрузка и рендеринг полного текста документа...</div>';
+            try {
+                const res = await fetch(`${API_BASE}/api/documents/parsed/${encodeURIComponent(currentDocumentFilename)}?full=true`);
+                currentParsedData = await res.json();
+                renderParsedMarkdownView(true);
+            } catch (err) {
+                mdContainer.innerHTML = `<div style="color:#f92672; padding:20px;">❌ Ошибка загрузки: ${err.message}</div>`;
+            }
+        }
+
+        function renderParsedMarkdownView(isFull = false) {
             if (!currentParsedData) return;
             const md = currentParsedData.markdown || '';
             const meta = currentParsedData.metadata || {};
+            const totalChars = meta.char_count || currentParsedData.total_chars || md.length;
+            const totalWords = meta.word_count || Math.round(totalChars / 6);
 
-            // Render KPIs
-            document.getElementById('kpiChars').textContent = (meta.char_count || md.length).toLocaleString();
-            document.getElementById('kpiWords').textContent = (meta.word_count || md.split(/\s+/).length).toLocaleString();
+            // Render KPIs instantly without heavy regex
+            document.getElementById('kpiChars').textContent = totalChars.toLocaleString();
+            document.getElementById('kpiWords').textContent = totalWords.toLocaleString();
             document.getElementById('kpiChunks').textContent = (meta.chunks_count || 1).toLocaleString();
             document.getElementById('kpiTables').textContent = (meta.table_lines ? `${meta.table_lines} строк` : (meta.has_tables ? 'Да' : 'Нет'));
 
-            // Render Markdown View with High Performance Chunking for > 250KB documents
+            // Render Formatted Markdown
             const mdContainer = document.getElementById('docMarkdownContainer');
-            const maxPreviewChars = 250000;
-
-            if (md.length > maxPreviewChars && !window._renderFullMarkdown) {
-                const truncatedMd = md.slice(0, maxPreviewChars) + `\n\n---\n\n> ⚡ **Показаны первые 250 000 символов для мгновенной загрузки.** Полный объем: **${md.length.toLocaleString()} символов**.\n\n<button class="graph-btn" style="margin-top:10px; padding:6px 14px; background:#f92672; color:#fff;" onclick="window._renderFullMarkdown=true; renderParsedMarkdownView();">🚀 Отрендерить весь документ целиком (${Math.round(md.length/1024)} KB)</button>`;
+            if (currentParsedData.is_truncated && !isFull) {
+                const banner = `\n\n---\n\n> ⚡ **Показаны первые 250 000 символов (из ${totalChars.toLocaleString()}) для плавности браузера.**\n\n<button class="graph-btn" style="margin-top:10px; padding:6px 16px; background:#f92672; color:#fff;" onclick="loadFullMarkdown()">🚀 Загрузить весь документ целиком (${Math.round(totalChars/1024)} KB)</button>\n\n`;
                 if (window.marked) {
-                    mdContainer.innerHTML = marked.parse(truncatedMd);
+                    mdContainer.innerHTML = marked.parse(md + banner);
                 } else {
-                    mdContainer.textContent = truncatedMd;
+                    mdContainer.textContent = md;
                 }
             } else {
                 if (window.marked) {
@@ -2206,8 +2218,8 @@
 
             // Render Raw View
             const rawEl = document.getElementById('docMarkdownRawCode');
-            if (md.length > maxPreviewChars && !window._renderFullMarkdown) {
-                rawEl.textContent = md.slice(0, maxPreviewChars) + `\n\n... [Остальные ${md.length - maxPreviewChars} символов доступны по кнопке Скачать .md]`;
+            if (currentParsedData.is_truncated && !isFull) {
+                rawEl.textContent = md + `\n\n... [Остальные ${(totalChars - md.length).toLocaleString()} символов доступны по кнопке Скачать .md или Загрузить полный текст]`;
             } else {
                 rawEl.textContent = md;
             }

@@ -301,16 +301,36 @@ def get_document(filename: str) -> FileResponse:
     )
 
 @app.get("/api/documents/parsed/{filename}")
-def get_parsed_markdown(filename: str) -> Dict[str, Any]:
+def get_parsed_markdown(filename: str, full: bool = False) -> Dict[str, Any]:
     """
     Stage 1 Parsing Quality Inspection Endpoint:
     Returns the extracted structured Markdown, table fidelity metrics, and character stats.
+    For large documents (> 250KB), delivers instant lightweight preview payload unless full=True.
     """
     import urllib.parse
     decoded_filename = urllib.parse.unquote(filename)
     if os.sep in decoded_filename or "/" in decoded_filename or "\\" in decoded_filename:
         raise HTTPException(status_code=400, detail="Invalid filename.")
-    return ingestion_pipeline.get_document_markdown(decoded_filename)
+    
+    result = ingestion_pipeline.get_document_markdown(decoded_filename)
+    md = result.get("markdown", "")
+    meta = result.get("metadata", {})
+    
+    total_len = len(md)
+    max_preview = 250000
+    
+    if not full and total_len > max_preview:
+        return {
+            "status": result.get("status", "cached"),
+            "filename": decoded_filename,
+            "markdown": md[:max_preview],
+            "is_truncated": True,
+            "total_chars": total_len,
+            "preview_chars": max_preview,
+            "metadata": meta
+        }
+        
+    return result
 
 @app.get("/api/documents/parsed/{filename}/download")
 def download_parsed_markdown(filename: str) -> FileResponse:
