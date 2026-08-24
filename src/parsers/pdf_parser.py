@@ -20,13 +20,11 @@ class PDFParser(BaseParser):
         min_char_threshold: int = 30,
         ollama_url: str = "http://localhost:11434",
         vision_model: str = "llama3.2-vision:11b",
-        fallback_vision_model: str = "minicpm-v",
         enable_ocr: bool = True
     ):
         self.min_char_threshold = min_char_threshold
         self.ollama_url = ollama_url.rstrip("/")
         self.vision_model = vision_model
-        self.fallback_vision_model = fallback_vision_model
         self.enable_ocr = enable_ocr
 
     def can_parse(self, file_path: str) -> bool:
@@ -96,42 +94,35 @@ class PDFParser(BaseParser):
                 "Если на странице нет текста, верни пустую строку."
             )
 
-            # Try primary vision model first (e.g. llama3.2-vision), fallback to minicpm-v
-            models_to_try = [self.vision_model, self.fallback_vision_model]
-            
-            for model_name in models_to_try:
-                url = f"{self.ollama_url}/api/generate"
-                payload = {
-                    "model": model_name,
-                    "prompt": prompt,
-                    "images": [b64_img],
-                    "stream": False,
-                    "options": {
-                        "temperature": 0.0,
-                        "num_predict": 1500
-                    }
+            url = f"{self.ollama_url}/api/generate"
+            payload = {
+                "model": self.vision_model,
+                "prompt": prompt,
+                "images": [b64_img],
+                "stream": False,
+                "options": {
+                    "temperature": 0.0,
+                    "num_predict": 1500
                 }
+            }
 
-                try:
-                    req = urllib.request.Request(
-                        url,
-                        data=json.dumps(payload).encode("utf-8"),
-                        headers={"Content-Type": "application/json"}
-                    )
-                    with urllib.request.urlopen(req, timeout=90) as resp:
-                        res = json.loads(resp.read().decode("utf-8"))
-                        extracted = res.get("response", "").strip()
-                        if "отсутствует содержимое" in extracted.lower() or "белый фон" in extracted.lower():
-                            return ""
-                        # Strip CJK unicode ranges
-                        cleaned_extracted = re.sub(r'[\u4e00-\u9fff\u3400-\u4dbf\u3000-\u303f]+', ' ', extracted).strip()
-                        if cleaned_extracted:
-                            return cleaned_extracted
-                except Exception as exc:
-                    print(f"[OCR WARN] Vision model '{model_name}' failed on page {page_num}: {exc}")
-                    continue
-
-            return ""
+            try:
+                req = urllib.request.Request(
+                    url,
+                    data=json.dumps(payload).encode("utf-8"),
+                    headers={"Content-Type": "application/json"}
+                )
+                with urllib.request.urlopen(req, timeout=90) as resp:
+                    res = json.loads(resp.read().decode("utf-8"))
+                    extracted = res.get("response", "").strip()
+                    if "отсутствует содержимое" in extracted.lower() or "белый фон" in extracted.lower():
+                        return ""
+                    # Strip CJK unicode ranges
+                    cleaned_extracted = re.sub(r'[\u4e00-\u9fff\u3400-\u4dbf\u3000-\u303f]+', ' ', extracted).strip()
+                    return cleaned_extracted
+            except Exception as exc:
+                print(f"[OCR WARN] Vision model '{self.vision_model}' failed on page {page_num}: {exc}")
+                return ""
 
     def parse(self, file_path: str) -> List[DocumentChunk]:
         chunks = []
