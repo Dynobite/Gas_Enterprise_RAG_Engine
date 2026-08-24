@@ -490,10 +490,10 @@
         }
 
         .suggestion-chip {
-            background: rgba(30, 41, 59, 0.9);
-            border: 1px solid rgba(56, 189, 248, 0.35);
-            color: #e2e8f0;
-            padding: 6px 12px;
+            background: #1e1f1c;
+            border: 1px solid rgba(102, 217, 239, 0.35);
+            color: #f8f8f2;
+            padding: 6px 14px;
             border-radius: 16px;
             font-size: 12px;
             cursor: pointer;
@@ -505,20 +505,20 @@
         }
 
         .suggestion-chip:hover {
-            background: rgba(56, 189, 248, 0.2);
+            background: #3e3d32;
             border-color: #66d9ef;
             color: #66d9ef;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25);
+            box-shadow: 0 4px 14px rgba(102, 217, 239, 0.3);
         }
 
 
         
                 /* Dynamic Slot-Filling Query Clarifier */
         .clarifier-drawer {
-            background: rgba(15, 23, 42, 0.96);
+            background: rgba(30, 31, 28, 0.98);
             backdrop-filter: blur(20px);
-            border-top: 1px solid rgba(245, 158, 11, 0.45);
+            border-top: 1px solid #e6db74;
             border-bottom: 1px solid var(--border-color);
             padding: 18px 24px;
             display: flex;
@@ -567,13 +567,13 @@
         }
 
         .clarifier-question-box {
-            background: rgba(30, 41, 59, 0.7);
-            border-left: 3px solid #fd971f;
+            background: #1e1f1c;
+            border-left: 3px solid #e6db74;
             padding: 10px 14px;
             border-radius: 6px;
             font-size: 14px;
             font-weight: 500;
-            color: #fef08a;
+            color: #f8f8f2;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -586,8 +586,8 @@
         }
 
         .clarifier-opt-card {
-            background: rgba(30, 41, 59, 0.85);
-            border: 1px solid rgba(56, 189, 248, 0.25);
+            background: #272822;
+            border: 1px solid rgba(248, 248, 242, 0.14);
             padding: 12px 14px;
             border-radius: 10px;
             cursor: pointer;
@@ -599,10 +599,10 @@
         }
 
         .clarifier-opt-card:hover {
-            background: rgba(56, 189, 248, 0.15);
+            background: #3e3d32;
             border-color: #66d9ef;
             transform: translateY(-2px);
-            box-shadow: 0 4px 14px rgba(56, 189, 248, 0.2);
+            box-shadow: 0 4px 14px rgba(102, 217, 239, 0.25);
         }
 
         .clarifier-opt-label {
@@ -629,24 +629,24 @@
         }
 
         .clarify-btn {
-            background: rgba(30, 41, 59, 0.85) !important;
-            border: 1px solid rgba(245, 158, 11, 0.4) !important;
+            background: #1e1f1c !important;
+            border: 1px solid #e6db74 !important;
             color: #e6db74 !important;
             padding: 0 16px !important;
             display: inline-flex;
             align-items: center;
             gap: 6px;
             font-size: 13px !important;
-            font-weight: 500 !important;
+            font-weight: 600 !important;
             border-radius: 10px;
             cursor: pointer;
             transition: all 0.2s ease;
         }
 
         .clarify-btn:hover {
-            background: rgba(245, 158, 11, 0.2) !important;
+            background: rgba(230, 219, 116, 0.2) !important;
             border-color: #e6db74 !important;
-            box-shadow: 0 0 12px rgba(245, 158, 11, 0.25);
+            box-shadow: 0 0 14px rgba(230, 219, 116, 0.35);
         }
 
         .clarify-btn.loading {
@@ -698,23 +698,23 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(245, 158, 11, 0.25));
-            border: 1px solid rgba(56, 189, 248, 0.4);
-            color: #66d9ef;
+            background: #3e3d32;
+            border: 1px solid rgba(248, 248, 242, 0.16);
+            color: #f8f8f2;
             padding: 8px 16px;
             border-radius: 10px;
             font-size: 13px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.25s;
-            box-shadow: 0 0 12px rgba(56, 189, 248, 0.15);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
         }
 
         .graph-btn:hover {
-            background: linear-gradient(135deg, rgba(56, 189, 248, 0.35), rgba(245, 158, 11, 0.4));
-            border-color: #66d9ef;
+            background: #f92672;
+            border-color: #f92672;
             color: #ffffff;
-            box-shadow: 0 0 18px rgba(56, 189, 248, 0.4);
+            box-shadow: 0 0 16px rgba(249, 38, 114, 0.45);
             transform: translateY(-1px);
         }
 
@@ -737,12 +737,12 @@
         .graph-modal-content {
             width: 92vw;
             height: 88vh;
-            background: #0f172a;
-            border: 1px solid rgba(56, 189, 248, 0.35);
+            background: #272822;
+            border: 1px solid rgba(248, 248, 242, 0.18);
             border-radius: 18px;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(56, 189, 248, 0.2);
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(102, 217, 239, 0.15);
             overflow: hidden;
             position: relative;
         }
@@ -789,11 +789,11 @@
         }
 
         .graph-search-input {
-            background: rgba(30, 41, 59, 0.8);
+            background: #1e1f1c;
             border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 6px 12px;
-            color: white;
+            color: #f8f8f2;
             font-size: 13px;
             outline: none;
             width: 240px;
@@ -802,7 +802,7 @@
         .graph-canvas-container {
             flex: 1;
             position: relative;
-            background: radial-gradient(#1e293b 1.5px, #0b0f19 1.5px);
+            background: radial-gradient(#3e3d32 1.5px, #1e1f1c 1.5px);
             background-size: 24px 24px;
             overflow: hidden;
             cursor: grab;
@@ -870,9 +870,9 @@
 
         select {
             width: 100%;
-            background: rgba(15, 23, 42, 0.8);
+            background: #1e1f1c;
             border: 1px solid var(--border-color);
-            color: white;
+            color: #f8f8f2;
             padding: 12px;
             border-radius: 8px;
             outline: none;
@@ -889,7 +889,8 @@
         }
 
         .upload-box:hover {
-            border-color: var(--accent-glow);
+            border-color: #a6e22e;
+            box-shadow: 0 0 16px rgba(166, 226, 46, 0.25);
         }
 
         .upload-box input {
