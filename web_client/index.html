@@ -1827,7 +1827,27 @@
         /* --- STATS DASHBOARD LOGIC --- */
         let currentStatsTab = 'registry';
         let cachedStatsData = null;
-        let cachedAnalyticsData = null;
+        async function refreshStatsData() {
+            const icons = document.querySelectorAll('.stats-refresh-icon');
+            icons.forEach(icon => icon.style.transform = 'rotate(360deg)');
+
+            try {
+                const [statsRes, analyticsRes] = await Promise.all([
+                    fetch(`${API_BASE}/api/stats?_t=${Date.now()}`),
+                    fetch(`${API_BASE}/api/analytics?_t=${Date.now()}`)
+                ]);
+                cachedStatsData = await statsRes.json();
+                cachedAnalyticsData = await analyticsRes.json();
+                renderStatsModalContent();
+            } catch (e) {
+                console.error('Refresh error:', e);
+            } finally {
+                setTimeout(() => {
+                    const newIcons = document.querySelectorAll('.stats-refresh-icon');
+                    newIcons.forEach(icon => icon.style.transform = 'rotate(0deg)');
+                }, 500);
+            }
+        }
 
         async function openStatsModal(tab = 'registry') {
             const modal = document.getElementById('statsModal');
@@ -1839,8 +1859,8 @@
 
             try {
                 const [statsRes, analyticsRes] = await Promise.all([
-                    fetch(`${API_BASE}/api/stats`),
-                    fetch(`${API_BASE}/api/analytics`)
+                    fetch(`${API_BASE}/api/stats?_t=${Date.now()}`),
+                    fetch(`${API_BASE}/api/analytics?_t=${Date.now()}`)
                 ]);
                 cachedStatsData = await statsRes.json();
                 cachedAnalyticsData = await analyticsRes.json();
@@ -1863,15 +1883,22 @@
             const kpis = analytics.kpis || {};
             const bestUp = kpis.best_uploader || { name: 'Lead-Engineer', uploads_count: 7, total_mb: 420.0 };
 
-            // Tab bar HTML
+            // Tab bar HTML with Refresh Button
             const tabBarHtml = `
-                <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:12px;">
-                    <button class="graph-btn" style="padding:8px 18px; font-size:13px; font-weight:600; ${currentStatsTab === 'registry' ? 'background:#f92672; color:#ffffff; border-color:#f92672; box-shadow:0 0 14px rgba(249,38,114,0.4);' : 'color:#8f908a; background:rgba(39,40,34,0.6); border-color:rgba(248,248,242,0.1);'}" onclick="switchStatsTab('registry')">
-                        📂 Реестр Базы Знаний & Документы
-                    </button>
-                    <button class="graph-btn" style="padding:8px 18px; font-size:13px; font-weight:600; ${currentStatsTab === 'analytics' ? 'background:#f92672; color:#ffffff; border-color:#f92672; box-shadow:0 0 14px rgba(249,38,114,0.4);' : 'color:#8f908a; background:rgba(39,40,34,0.6); border-color:rgba(248,248,242,0.1);'}" onclick="switchStatsTab('analytics')">
-                        📊 UX Аналитика & Пользовательский Опыт
-                    </button>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:12px; flex-wrap:wrap; gap:12px;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <button class="graph-btn" style="padding:8px 18px; font-size:13px; font-weight:600; ${currentStatsTab === 'registry' ? 'background:#f92672; color:#ffffff; border-color:#f92672; box-shadow:0 0 14px rgba(249,38,114,0.4);' : 'color:#8f908a; background:rgba(39,40,34,0.6); border-color:rgba(248,248,242,0.1);'}" onclick="switchStatsTab('registry')">
+                            📂 Реестр Базы Знаний & Документы
+                        </button>
+                        <button class="graph-btn" style="padding:8px 18px; font-size:13px; font-weight:600; ${currentStatsTab === 'analytics' ? 'background:#f92672; color:#ffffff; border-color:#f92672; box-shadow:0 0 14px rgba(249,38,114,0.4);' : 'color:#8f908a; background:rgba(39,40,34,0.6); border-color:rgba(248,248,242,0.1);'}" onclick="switchStatsTab('analytics')">
+                            📊 UX Аналитика & Пользовательский Опыт
+                        </button>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <button class="graph-btn" style="padding:7px 16px; font-size:12px; font-weight:600; background:#3e3d32; border-color:#66d9ef; color:#66d9ef; display:inline-flex; align-items:center; gap:6px; cursor:pointer;" onclick="refreshStatsData()">
+                            <span class="stats-refresh-icon" style="display:inline-block; transition:transform 0.5s ease;">🔄</span> Обновить данные
+                        </button>
+                    </div>
                 </div>
             `;
 
@@ -2235,7 +2262,12 @@
                 <div class="graph-modal-title">
                     📊 Дашборд Статистики & Реестр Базы Знаний
                 </div>
-                <button class="graph-close-btn" onclick="closeStatsModal()">&times;</button>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <button class="graph-btn" style="padding:6px 14px; font-size:12px; font-weight:600; background:#3e3d32; border-color:#66d9ef; color:#66d9ef; display:inline-flex; align-items:center; gap:6px; cursor:pointer;" onclick="refreshStatsData()">
+                        <span class="stats-refresh-icon" style="display:inline-block; transition:transform 0.5s ease;">🔄</span> Обновить
+                    </button>
+                    <button class="graph-close-btn" onclick="closeStatsModal()">&times;</button>
+                </div>
             </div>
             <div id="statsContent" style="flex:1; padding:24px; overflow-y:auto;">
                 <!-- Filled via openStatsModal() -->
