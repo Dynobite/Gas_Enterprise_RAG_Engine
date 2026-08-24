@@ -300,6 +300,40 @@ def get_document(filename: str) -> FileResponse:
         headers={"Content-Disposition": f"inline; filename*=UTF-8''{urllib.parse.quote(decoded_filename)}"}
     )
 
+@app.get("/api/documents/parsed/{filename}")
+def get_parsed_markdown(filename: str) -> Dict[str, Any]:
+    """
+    Stage 1 Parsing Quality Inspection Endpoint:
+    Returns the extracted structured Markdown, table fidelity metrics, and character stats.
+    """
+    import urllib.parse
+    decoded_filename = urllib.parse.unquote(filename)
+    if os.sep in decoded_filename or "/" in decoded_filename or "\\" in decoded_filename:
+        raise HTTPException(status_code=400, detail="Invalid filename.")
+    return ingestion_pipeline.get_document_markdown(decoded_filename)
+
+@app.get("/api/documents/parsed/{filename}/download")
+def download_parsed_markdown(filename: str) -> FileResponse:
+    """Download the extracted structured Markdown (.md) file directly."""
+    import urllib.parse
+    decoded_filename = urllib.parse.unquote(filename)
+    if os.sep in decoded_filename or "/" in decoded_filename or "\\" in decoded_filename:
+        raise HTTPException(status_code=400, detail="Invalid filename.")
+    
+    # Ensure generated
+    ingestion_pipeline.get_document_markdown(decoded_filename)
+    md_file = os.path.join(ingestion_pipeline.markdown_dir, f"{decoded_filename}.md")
+    
+    if not os.path.exists(md_file):
+        raise HTTPException(status_code=404, detail="Parsed markdown not found.")
+        
+    return FileResponse(
+        md_file,
+        media_type="text/markdown; charset=utf-8",
+        filename=f"{decoded_filename}.md",
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{urllib.parse.quote(decoded_filename)}.md"}
+    )
+
 @app.get("/api/documents/preview/{filename}", response_class=HTMLResponse)
 def get_document_preview(filename: str, page: Optional[int] = 1, sheet: Optional[str] = None):
     """
