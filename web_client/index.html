@@ -2182,19 +2182,35 @@
             // Render KPIs
             document.getElementById('kpiChars').textContent = (meta.char_count || md.length).toLocaleString();
             document.getElementById('kpiWords').textContent = (meta.word_count || md.split(/\s+/).length).toLocaleString();
-            document.getElementById('kpiChunks').textContent = (meta.chunks_count || 1);
+            document.getElementById('kpiChunks').textContent = (meta.chunks_count || 1).toLocaleString();
             document.getElementById('kpiTables').textContent = (meta.table_lines ? `${meta.table_lines} строк` : (meta.has_tables ? 'Да' : 'Нет'));
 
-            // Render Markdown View
+            // Render Markdown View with High Performance Chunking for > 250KB documents
             const mdContainer = document.getElementById('docMarkdownContainer');
-            if (window.marked) {
-                mdContainer.innerHTML = marked.parse(md);
+            const maxPreviewChars = 250000;
+
+            if (md.length > maxPreviewChars && !window._renderFullMarkdown) {
+                const truncatedMd = md.slice(0, maxPreviewChars) + `\n\n---\n\n> ⚡ **Показаны первые 250 000 символов для мгновенной загрузки.** Полный объем: **${md.length.toLocaleString()} символов**.\n\n<button class="graph-btn" style="margin-top:10px; padding:6px 14px; background:#f92672; color:#fff;" onclick="window._renderFullMarkdown=true; renderParsedMarkdownView();">🚀 Отрендерить весь документ целиком (${Math.round(md.length/1024)} KB)</button>`;
+                if (window.marked) {
+                    mdContainer.innerHTML = marked.parse(truncatedMd);
+                } else {
+                    mdContainer.textContent = truncatedMd;
+                }
             } else {
-                mdContainer.textContent = md;
+                if (window.marked) {
+                    mdContainer.innerHTML = marked.parse(md);
+                } else {
+                    mdContainer.textContent = md;
+                }
             }
 
             // Render Raw View
-            document.getElementById('docMarkdownRawCode').textContent = md;
+            const rawEl = document.getElementById('docMarkdownRawCode');
+            if (md.length > maxPreviewChars && !window._renderFullMarkdown) {
+                rawEl.textContent = md.slice(0, maxPreviewChars) + `\n\n... [Остальные ${md.length - maxPreviewChars} символов доступны по кнопке Скачать .md]`;
+            } else {
+                rawEl.textContent = md;
+            }
         }
 
         function copyParsedMarkdown() {
