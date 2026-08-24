@@ -24,7 +24,7 @@
 * 👁️ **Adaptive Vision-Language OCR**: Automated raster PDF scan detection + instant sub-second `pdftoppm` rendering + direct base64 streaming to local `llama3.2-vision:11b` on GPU with automatic CJK unicode filtering.
 * 📊 **Hierarchical Table Preservation**: Native unmerging and multi-row header inheritance for Excel DFMEA and BOM specifications.
 * ⚖️ **LLM-as-a-Judge Fact Auditor**: Autonomous NLI Premise-Hypothesis entailment guardrail computing Grounding Ratio (%) at zero temperature.
-* 🌐 **Universal In-Browser Document Previewer**: Native HTML rendering for `.xlsx` (interactive sheets & search), `.docx` (typography), and `.pdf` (`#page=N`) with zero downloads.
+* 🌐 **Universal In-Browser Document Previewer & Stage 1 MD Inspector**: Native HTML rendering for `.xlsx` (interactive sheets & search), `.docx` (typography), `.pdf` (`#page=N`), and structured Stage 1 `.md` quality verification with KPI telemetry bar (character, word, and table counts) with zero downloads.
 * 📈 **Client IP UX Analytics & Telemetry**: Embedded SQLite store logging real workstation client IPs, query latencies, and activity leaderboards.
 
 ---
