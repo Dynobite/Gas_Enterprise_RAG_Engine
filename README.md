@@ -16,12 +16,12 @@
 * 🤖 **Multi-Tier Local LLM Suite**:
   - **Primary Synthesis:** `qwen3.6:35b` (MoE) / `deepseek-r1:32b` (Deep technical reasoning).
   - **Fast Interactive Co-Pilot:** `gpt-oss:20b` (Lightweight 20.9B parameter fast model for instant intent slot-filling & quick summaries).
-  - **Vision OCR:** `minicpm-v:latest` (8B VLM).
+  - **Vision OCR:** `llama3.2-vision:11b` (Meta Multimodal 11B VLM).
   - **Embeddings:** `bge-m3` (1024-dim dense).
 * ⚡ **Two-Stage Hybrid Retrieval**:
   1. **Stage 1 (Qdrant HNSW)**: Dense multilingual semantic search (`bge-m3`, 1024 dimensions) in **~3 ms** across 32,000+ points.
   2. **Stage 2 (FlashRank)**: Cross-encoder deep attention re-scoring (`ms-marco-MiniLM-L-12-v2`) in **~18 ms**.
-* 👁️ **Adaptive Vision-Language OCR**: Automated raster PDF scan detection + instant sub-second `pdftoppm` rendering + direct base64 streaming to local `minicpm-v` (8B VLM) on GPU.
+* 👁️ **Adaptive Vision-Language OCR**: Automated raster PDF scan detection + instant sub-second `pdftoppm` rendering + direct base64 streaming to local `llama3.2-vision:11b` on GPU with automatic CJK unicode filtering.
 * 📊 **Hierarchical Table Preservation**: Native unmerging and multi-row header inheritance for Excel DFMEA and BOM specifications.
 * ⚖️ **LLM-as-a-Judge Fact Auditor**: Autonomous NLI Premise-Hypothesis entailment guardrail computing Grounding Ratio (%) at zero temperature.
 * 🌐 **Universal In-Browser Document Previewer**: Native HTML rendering for `.xlsx` (interactive sheets & search), `.docx` (typography), and `.pdf` (`#page=N`) with zero downloads.
@@ -46,7 +46,7 @@
 ```mermaid
 flowchart TD
     subgraph INGESTION ["📥 Multi-Modal Ingestion Engine (Offline / Upload)"]
-        PDF["📄 PDF Standards (Digital & Scans)<br/><b>[Hard-code: PyPDF Parser]</b>"] --> OCR["Adaptive Vision OCR<br/><b>[NN: MiniCPM-V 8B VLM via pdftoppm]</b>"]
+        PDF["📄 PDF Standards (Digital & Scans)<br/><b>[Hard-code: PyPDF Parser]</b>"] --> OCR["Adaptive Vision OCR<br/><b>[NN: LLaMA-3.2-Vision 11B via pdftoppm]</b>"]
         XLS["📊 Excel DFMEA & BOM Tables<br/><b>[Hard-code: OpenPyXL Unmerging Script]</b>"] --> UNMERGE["Hierarchical Header Matrix<br/><b>[Deterministic Algorithm: Cell Propagation]</b>"]
         DOC["📝 DOCX Technical Reports<br/><b>[Hard-code: Mammoth Parser]</b>"] --> MAM["Structure & Typography Engine<br/><b>[Deterministic Algorithm]</b>"]
         
