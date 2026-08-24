@@ -2009,11 +2009,11 @@
                             <td style="padding:10px 12px; font-family:Consolas,monospace; color:#e6db74;">${f.size_mb} MB</td>
                             <td style="padding:10px 12px; display:flex; align-items:center; gap:8px;">
                                 <button class="graph-btn" style="padding:5px 12px; font-size:11px; background:#3e3d32; border-color:#66d9ef; color:#66d9ef;" onclick="openDocumentViewer('${API_BASE}/api/documents/preview/${encodeURIComponent(f.name)}', '${f.name}')">
-                                    👁️ Просмотр
+                                    👁️ Оригинал
                                 </button>
-                                <a class="graph-btn" style="text-decoration:none; padding:5px 12px; font-size:11px; background:rgba(166,226,46,0.12); border-color:#a6e22e; color:#a6e22e;" href="${API_BASE}/api/documents/parsed/${encodeURIComponent(f.name)}/download" target="_blank">
-                                    💾 Скачать .md (Stage 1)
-                                </a>
+                                <button class="graph-btn" style="padding:5px 12px; font-size:11px; background:rgba(230,219,116,0.15); border-color:#e6db74; color:#e6db74;" onclick="openDocumentViewer('${API_BASE}/api/documents/markdown-preview/${encodeURIComponent(f.name)}', '${f.name}')">
+                                    📝 Верификация MD
+                                </button>
                             </td>
                         </tr>
                     `;
@@ -2088,14 +2088,15 @@
             if (!targetUrl) {
                 targetUrl = `${API_BASE}/api/documents/preview/${encodeURIComponent(rawName)}`;
             }
-            if (targetUrl.includes('/api/documents/') && !targetUrl.includes('/api/documents/preview/')) {
+            if (targetUrl.includes('/api/documents/') && !targetUrl.includes('/api/documents/preview/') && !targetUrl.includes('/api/documents/markdown-preview/')) {
                 targetUrl = targetUrl.replace('/api/documents/', '/api/documents/preview/');
             }
             if (page && !targetUrl.includes('#page=')) {
                 targetUrl += `#page=${page}`;
             }
 
-            titleEl.textContent = `📄 ${rawName || 'Просмотр документа'}`;
+            const isMd = targetUrl.includes('markdown-preview');
+            titleEl.textContent = `${isMd ? '📝' : '📄'} ${rawName || 'Просмотр документа'}`;
             newTabBtn.href = targetUrl;
             frame.src = targetUrl;
             modal.style.display = 'flex';

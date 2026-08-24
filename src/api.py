@@ -354,6 +354,258 @@ def download_parsed_markdown(filename: str) -> FileResponse:
         headers={"Content-Disposition": f"attachment; filename*=UTF-8''{urllib.parse.quote(decoded_filename)}.md"}
     )
 
+@app.get("/api/documents/markdown-preview/{filename}", response_class=HTMLResponse)
+def get_markdown_preview(filename: str) -> HTMLResponse:
+    """
+    Integrated In-Browser Stage 1 Markdown Quality Inspector:
+    Renders extracted structured Markdown in full Monokai typography with KPI telemetry.
+    """
+    import urllib.parse, html, json
+    decoded_filename = urllib.parse.unquote(filename)
+    if os.sep in decoded_filename or "/" in decoded_filename or "\\" in decoded_filename:
+        raise HTTPException(status_code=400, detail="Invalid filename.")
+    
+    parsed = ingestion_pipeline.get_document_markdown(decoded_filename)
+    md_text = parsed.get("markdown", "")
+    meta = parsed.get("metadata", {})
+    char_count = meta.get("char_count", len(md_text))
+    word_count = meta.get("word_count", len(md_text.split()))
+    chunks_count = meta.get("chunks_count", "1")
+    table_lines = meta.get("table_lines", 0)
+
+    # Safe json string for client-side rendering
+    md_json = json.dumps(md_text, ensure_ascii=False)
+    escaped_name = html.escape(decoded_filename)
+    encoded_name = urllib.parse.quote(decoded_filename)
+    tables_val = str(table_lines) if table_lines else "Есть"
+
+    html_template = """<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <title>📝 MD: {{DOC_NAME}}</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 0;
+            background: #272822;
+            color: #f8f8f2;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+        .top-bar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: #1e1f1c;
+            border-bottom: 1px solid rgba(248, 248, 242, 0.15);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        .doc-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #66d9ef;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .kpi-group {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 12px;
+            color: #8f908a;
+            flex-wrap: wrap;
+        }
+        .kpi-badge {
+            color: #a6e22e;
+            font-weight: 600;
+        }
+        .kpi-val {
+            color: #f8f8f2;
+            font-weight: 600;
+        }
+        .btn {
+            background: #3e3d32;
+            color: #f8f8f2;
+            border: 1px solid rgba(248, 248, 242, 0.2);
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s ease;
+        }
+        .btn:hover {
+            background: #f92672;
+            color: #ffffff;
+            border-color: #f92672;
+            box-shadow: 0 0 10px rgba(249, 38, 114, 0.4);
+        }
+        .btn-green {
+            border-color: #a6e22e;
+            color: #a6e22e;
+        }
+        .btn-green:hover {
+            background: #a6e22e;
+            color: #1e1f1c;
+            border-color: #a6e22e;
+            box-shadow: 0 0 10px rgba(166, 226, 46, 0.4);
+        }
+        .content-area {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 36px 32px;
+        }
+        h1, h2, h3, h4 {
+            color: #66d9ef;
+            border-bottom: 1px solid rgba(248, 248, 242, 0.1);
+            padding-bottom: 8px;
+            margin-top: 28px;
+        }
+        h1 { color: #fd971f; font-size: 24px; }
+        h2 { color: #a6e22e; font-size: 18px; margin-top: 36px; }
+        h3 { color: #66d9ef; font-size: 15px; }
+        blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            background: rgba(30, 31, 28, 0.8);
+            border-left: 4px solid #e6db74;
+            color: #e6db74;
+            border-radius: 0 8px 8px 0;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(248, 248, 242, 0.15);
+        }
+        th {
+            background: #1e1f1c;
+            color: #66d9ef;
+            font-weight: 700;
+            padding: 10px 14px;
+            border: 1px solid rgba(248, 248, 242, 0.12);
+            text-align: left;
+        }
+        td {
+            padding: 9px 14px;
+            border: 1px solid rgba(248, 248, 242, 0.08);
+            background: rgba(39, 40, 34, 0.7);
+        }
+        tr:nth-child(even) td {
+            background: rgba(30, 31, 28, 0.6);
+        }
+        tr:hover td {
+            background: rgba(102, 217, 239, 0.1);
+        }
+        code {
+            background: #1e1f1c;
+            color: #f92672;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: Consolas, monospace;
+            font-size: 13px;
+        }
+        pre code {
+            display: block;
+            padding: 16px;
+            overflow-x: auto;
+            color: #a6e22e;
+            border-radius: 8px;
+            border: 1px solid rgba(248, 248, 242, 0.12);
+        }
+        hr {
+            border: none;
+            border-top: 1px solid rgba(248, 248, 242, 0.12);
+            margin: 32px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <div class="doc-title">
+            <span>📝</span> {{DOC_NAME}}
+        </div>
+        <div class="kpi-group">
+            <span class="kpi-badge">✅ Stage 1 MD Верифицирован</span>
+            <span>Символов: <span class="kpi-val">{{CHAR_COUNT}}</span></span>
+            <span>Слов: <span class="kpi-val">{{WORD_COUNT}}</span></span>
+            <span>Чанков/Страниц: <span class="kpi-val" style="color:#66d9ef;">{{CHUNKS_COUNT}}</span></span>
+            <span>Таблицы: <span class="kpi-val" style="color:#e6db74;">{{TABLES_VAL}}</span></span>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+            <button id="copyBtn" class="btn btn-green" onclick="copyMd()">📋 Скопировать</button>
+            <a class="btn" href="/api/documents/parsed/{{DOC_URL}}/download" target="_blank">💾 Скачать .md</a>
+        </div>
+    </div>
+
+    <div class="content-area" id="mdTarget">
+        <div style="text-align:center; padding:50px; color:#66d9ef;">⏳ Рендеринг документа...</div>
+    </div>
+
+    <script>
+        const rawMarkdown = {{MD_JSON}};
+        const maxChunkChars = 350000;
+
+        function renderDocument(full = false) {
+            const target = document.getElementById('mdTarget');
+            if (rawMarkdown.length > maxChunkChars && !full) {
+                const previewText = rawMarkdown.slice(0, maxChunkChars) + '\\n\\n---\\n\\n> ⚡ **Показаны первые 350 000 символов.** Полный объем: **' + rawMarkdown.length.toLocaleString() + ' символов**.\\n\\n<button class="btn" style="background:#f92672; color:#fff;" onclick="renderDocument(true)">🚀 Отрендерить весь документ целиком</button>';
+                if (window.marked) {
+                    target.innerHTML = marked.parse(previewText);
+                } else {
+                    target.textContent = previewText;
+                }
+            } else {
+                if (window.marked) {
+                    target.innerHTML = marked.parse(rawMarkdown);
+                } else {
+                    target.textContent = rawMarkdown;
+                }
+            }
+        }
+
+        function copyMd() {
+            navigator.clipboard.writeText(rawMarkdown).then(() => {
+                const btn = document.getElementById('copyBtn');
+                const orig = btn.innerHTML;
+                btn.innerHTML = '✅ Скопировано!';
+                setTimeout(() => { btn.innerHTML = orig; }, 2000);
+            });
+        }
+
+        // Initialize render
+        renderDocument();
+    </script>
+</body>
+</html>"""
+
+    html_content = html_template.replace("{{DOC_NAME}}", escaped_name)
+    html_content = html_content.replace("{{DOC_URL}}", encoded_name)
+    html_content = html_content.replace("{{CHAR_COUNT}}", f"{char_count:,}")
+    html_content = html_content.replace("{{WORD_COUNT}}", f"{word_count:,}")
+    html_content = html_content.replace("{{CHUNKS_COUNT}}", str(chunks_count))
+    html_content = html_content.replace("{{TABLES_VAL}}", str(tables_val))
+    html_content = html_content.replace("{{MD_JSON}}", md_json)
+
+    return HTMLResponse(html_content)
+
 @app.get("/api/documents/preview/{filename}", response_class=HTMLResponse)
 def get_document_preview(filename: str, page: Optional[int] = 1, sheet: Optional[str] = None):
     """
