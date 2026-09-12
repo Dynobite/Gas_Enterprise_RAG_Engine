@@ -1,42 +1,52 @@
 """
-Text Chunker Module.
-Splits text into chunks by word count with configurable overlap.
+Chunker module applying sliding window with overlap to document texts.
 """
-from typing import List, Dict, Any, Optional
 
-class TextChunk:
-    """Represents a discrete chunk of text extracted from a document."""
-    def __init__(self, text: str, metadata: Optional[Dict[str, Any]] = None):
-        self.text: str = text
-        self.metadata: Dict[str, Any] = metadata if metadata is not None else {}
-
-    def __repr__(self) -> str:
-        source = self.metadata.get("source", "unknown")
-        page = self.metadata.get("page", "?")
-        return f"<TextChunk len={len(self.text)} source={source} page={page}>"
-
+from typing import List, Dict, Any
+from src.parsers.base import DocumentChunk
 
 class SlidingWindowChunker:
-    """Splits plain text into overlapping word windows."""
-    def __init__(self, chunk_size: int = 250, chunk_overlap: int = 50):
-        self.chunk_size: int = chunk_size
-        self.chunk_overlap: int = chunk_overlap
+    def __init__(self, chunk_size_words: int = 400, chunk_overlap_words: int = 80):
+        self.chunk_size_words = chunk_size_words
+        self.chunk_overlap_words = chunk_overlap_words
 
-    def chunk(self, text: str, base_metadata: Optional[Dict[str, Any]] = None) -> List[TextChunk]:
-        """Splits text into sliding window chunks."""
-        words = text.split()
-        if not words:
-            return []
+    def chunk_documents(self, doc_chunks: List[DocumentChunk]) -> List[DocumentChunk]:
+        """Takes raw page/section chunks and splits large ones into overlapping windows."""
+        final_chunks = []
+        
+        for doc in doc_chunks:
+            if not doc.text or not doc.text.strip():
+                continue  # Skip empty/whitespace-only document sections
 
-        meta = base_metadata.copy() if base_metadata else {}
-        chunks: List[TextChunk] = []
-        step = self.chunk_size - self.chunk_overlap
+            words = doc.text.split()
+            
+            # If the chunk is already small enough (e.g. single page or small table), keep as is
+            if len(words) <= self.chunk_size_words:
+                chunk_id = f"{doc.metadata.get('source', 'doc')}_p{doc.metadata.get('page', 1)}_c0"
+                meta = dict(doc.metadata)
+                meta["chunk_id"] = chunk_id
+                meta["word_count"] = len(words)
+                final_chunks.append(DocumentChunk(text=doc.text, metadata=meta))
+                continue
 
-        for i in range(0, len(words), step):
-            chunk_words = words[i: i + self.chunk_size]
-            chunk_text = " ".join(chunk_words)
-            chunk_meta = meta.copy()
-            chunk_meta["chunk_index"] = len(chunks) + 1
-            chunks.append(TextChunk(text=chunk_text, metadata=chunk_meta))
+            # Apply sliding window
+            step = max(1, self.chunk_size_words - self.chunk_overlap_words)
+            chunk_sub_idx = 0
+            
+            for i in range(0, len(words), step):
+                window_words = words[i:i + self.chunk_size_words]
+                chunk_text = " ".join(window_words)
+                
+                chunk_id = f"{doc.metadata.get('source', 'doc')}_p{doc.metadata.get('page', 1)}_c{chunk_sub_idx}"
+                meta = dict(doc.metadata)
+                meta["chunk_id"] = chunk_id
+                meta["chunk_index"] = chunk_sub_idx
+                meta["word_count"] = len(window_words)
+                
+                final_chunks.append(DocumentChunk(text=chunk_text, metadata=meta))
+                chunk_sub_idx += 1
+                
+                if i + self.chunk_size_words >= len(words):
+                    break
 
-        return chunks
+        return final_chunks

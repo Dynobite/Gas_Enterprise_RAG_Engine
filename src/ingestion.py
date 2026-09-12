@@ -8,6 +8,7 @@ import os
 import sys
 import json
 import re
+import hashlib
 from typing import List, Dict, Any, Optional
 
 # Ensure UTF-8 stdout on Windows
@@ -81,12 +82,26 @@ class DocumentIngestionPipeline:
 
         return "".join(lines)
 
+    def _get_safe_artifact_name(self, filename: str) -> str:
+        base_name = os.path.basename(filename)
+        encoded_len = len(base_name.encode('utf-8'))
+        # Linux max filename is 255 bytes; leave margin for .meta.json (10 bytes)
+        if encoded_len > 240:
+            stem, ext = os.path.splitext(base_name)
+            h = hashlib.md5(base_name.encode('utf-8')).hexdigest()[:8]
+            # Truncate stem in bytes
+            stem_bytes = stem.encode('utf-8')[:180]
+            safe_stem = stem_bytes.decode('utf-8', errors='ignore')
+            return f"{safe_stem}_{h}{ext}"
+        return base_name
+
     def save_markdown_artifact(self, filename: str, markdown_content: str, chunks: List[DocumentChunk]) -> str:
         """Save structured markdown and metadata cache to data/processed/markdown/."""
         os.makedirs(self.markdown_dir, exist_ok=True)
         base_name = os.path.basename(filename)
-        md_file = os.path.join(self.markdown_dir, f"{base_name}.md")
-        meta_file = os.path.join(self.markdown_dir, f"{base_name}.meta.json")
+        safe_name = self._get_safe_artifact_name(filename)
+        md_file = os.path.join(self.markdown_dir, f"{safe_name}.md")
+        meta_file = os.path.join(self.markdown_dir, f"{safe_name}.meta.json")
 
         with open(md_file, "w", encoding="utf-8") as f:
             f.write(markdown_content)

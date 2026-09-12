@@ -545,9 +545,150 @@
             box-shadow: 0 4px 14px rgba(102, 217, 239, 0.3);
         }
 
+        /* LLM Thinking Process Collapsible Dropdown Bar */
+        .thought-box {
+            margin-bottom: 14px;
+            border: 1px solid rgba(174, 129, 255, 0.3);
+            background: rgba(30, 31, 28, 0.7);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: border-color 0.2s ease, background 0.2s ease;
+        }
 
-        
-                /* Dynamic Slot-Filling Query Clarifier */
+        .thought-box[open] {
+            border-color: rgba(174, 129, 255, 0.55);
+            background: rgba(30, 31, 28, 0.95);
+        }
+
+        .thought-summary {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 14px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            color: #ae81ff;
+            user-select: none;
+            list-style: none;
+            background: rgba(174, 129, 255, 0.08);
+            border-bottom: 1px solid transparent;
+            transition: background 0.2s ease;
+        }
+
+        .thought-summary:hover {
+            background: rgba(174, 129, 255, 0.16);
+        }
+
+        .thought-summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .thought-summary::after {
+            content: "▶";
+            font-size: 10px;
+            margin-left: auto;
+            transition: transform 0.2s ease;
+            color: #ae81ff;
+        }
+
+        .thought-box[open] .thought-summary {
+            border-bottom-color: rgba(174, 129, 255, 0.2);
+        }
+
+        .thought-box[open] .thought-summary::after {
+            transform: rotate(90deg);
+        }
+
+        .thought-status {
+            font-size: 11px;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .thought-status.pulse {
+            color: #fd971f;
+            background: rgba(253, 151, 31, 0.15);
+            animation: thoughtPulse 1.5s infinite;
+        }
+
+        .thought-status.done {
+            color: #a6e22e;
+            background: rgba(166, 226, 46, 0.15);
+        }
+
+        @keyframes thoughtPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.35; }
+        }
+
+        .thought-body {
+            padding: 12px 16px;
+            font-family: Consolas, "Fira Code", Monaco, monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            color: #cfd8dc;
+            max-height: 320px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            background: rgba(15, 17, 16, 0.6);
+        }
+
+        .answer-content {
+            line-height: 1.6;
+            color: var(--text-main);
+        }
+
+        /* Deep Reasoning Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #3e3d32;
+            border: 1px solid rgba(248, 248, 242, 0.2);
+            border-radius: 24px;
+            transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 2px;
+            bottom: 2px;
+            background-color: #cfd8dc;
+            border-radius: 50%;
+            transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background: linear-gradient(135deg, #ae81ff, #66d9ef);
+            border-color: #ae81ff;
+            box-shadow: 0 0 12px rgba(174, 129, 255, 0.45);
+        }
+
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+            background-color: #ffffff;
+        }
+
+        /* Dynamic Slot-Filling Query Clarifier */
         .clarifier-drawer {
             background: rgba(30, 31, 28, 0.98);
             backdrop-filter: blur(20px);
@@ -760,6 +901,19 @@
             color: #ffffff;
             box-shadow: 0 0 16px rgba(249, 38, 114, 0.45);
             transform: translateY(-1px);
+        }
+
+        .graph-btn.btn-delete {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.4);
+            color: #ef4444;
+        }
+
+        .graph-btn.btn-delete:hover {
+            background: #ef4444 !important;
+            border-color: #ef4444 !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 16px rgba(239, 68, 68, 0.5);
         }
 
         /* Graph Modal */
@@ -1055,7 +1209,7 @@
 
         <div class="status-badge">
             <div class="status-dot"></div>
-            Сервер c14753 (RTX A6000 48GB)
+            <span id="serverBadgeText">Сервер (подключение...)</span>
         </div>
     </header>
 
@@ -1094,13 +1248,28 @@
 
         <div class="sidebar">
             <div class="panel-card">
-                <div class="panel-title">🤖 Выбор Нейросети (Ollama)</div>
-                <select id="modelSelect">
-                    <option value="qwen3.6:35b" selected>Qwen 3.6 35B (MoE — Рекомендуется)</option>
-                    <option value="huihui_ai/deepseek-r1-abliterated:32b">DeepSeek R1 32B (Математика & Рассуждения)
-                    </option>
-                    <option value="gpt-oss:20b">GPT-OSS 20B (Быстрый анализ)</option>
+                <div class="panel-title" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>🤖 Нейросеть генерации</span>
+                    <span id="engineBadge" style="font-size: 11px; padding: 2px 7px; border-radius: 4px; background: rgba(166, 226, 46, 0.2); color: #a6e22e; font-weight: bold; border: 1px solid rgba(166, 226, 46, 0.4);">vLLM ⚡ 104 tok/s</span>
+                </div>
+                <select id="modelSelect" onchange="updateModelEngineBadge()">
+                    <option value="qwen3.6:35b" selected>⚡ Qwen 3.6 35B (vLLM High-Speed — 104 ток/с)</option>
+                    <option value="gpt-oss:20b">🛡️ GPT-OSS 20B (Ollama Резерв / Быстрый анализ)</option>
                 </select>
+                <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(248, 248, 242, 0.1); display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-size: 13px; font-weight: 600; color: #f8f8f2; display: flex; align-items: center; gap: 6px;">
+                            <span>🧠 Глубокий анализ</span>
+                        </div>
+                        <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                            Рассуждения (Deep Reasoning)
+                        </div>
+                    </div>
+                    <label class="toggle-switch" title="Включить пошаговый инженерный анализ (Chain-of-Thought)">
+                        <input type="checkbox" id="reasoningToggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
             </div>
 
             <div class="panel-card">
@@ -1109,7 +1278,7 @@
                     <div style="font-size: 24px; margin-bottom: 6px;">📂</div>
                     <div style="font-size: 14px; font-weight: 500;">Загрузить ГОСТ / PDF / Excel</div>
                     <div style="font-size: 12px; color: var(--text-muted);">Нажмите для выбора файла</div>
-                    <input type="file" id="fileInput" onchange="uploadDocument(event)">
+                    <input type="file" id="fileInput" multiple onchange="uploadDocument(event)">
                 </div>
                 <div id="uploadStatus" style="font-size: 12px; margin-top: 10px; color: #a6e22e;"></div>
             </div>
@@ -1119,18 +1288,28 @@
                 <button class="graph-btn" style="width: 100%; justify-content: center; padding: 10px; margin-bottom: 8px;" onclick="openGraphModal()">
                     🌌 3D Карта Базы Знаний
                 </button>
+                <button class="graph-btn" style="width: 100%; justify-content: center; padding: 10px; margin-bottom: 8px; background: linear-gradient(135deg, rgba(174, 129, 255, 0.2), rgba(102, 217, 239, 0.25)); border-color: rgba(174, 129, 255, 0.4); color: #ae81ff;" onclick="openGraphifyModal()">
+                    🕸️ Сеть Связей & Архитектура (Graphify)
+                </button>
                 <button class="graph-btn" style="width: 100%; justify-content: center; padding: 10px; background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(56, 189, 248, 0.25)); border-color: rgba(34, 197, 94, 0.4); color: #a6e22e;" onclick="openStatsModal()">
                     📊 Дашборд Статистики БД
                 </button>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; padding:0 4px;">
+                    <span style="font-size:11px; color:var(--text-muted);">Интерактивные графы:</span>
+                    <a href="javascript:void(0)" onclick="openGraphifyModal(); setTimeout(() => toggleGraphifyGuide(true), 150);" style="font-size:11px; color:#ae81ff; text-decoration:none; display:flex; align-items:center; gap:4px; font-weight:500;">
+                        📖 Как читать графы?
+                    </a>
+                </div>
             </div>
 
             <div class="panel-card">
-                <div class="panel-title">⚡ Инфраструктура c14753</div>
+                <div class="panel-title" id="infraPanelTitle">⚡ Инфраструктура</div>
                 <div class="system-info">
-                    <div class="info-row"><span>GPU:</span> <span>RTX A6000 (48GB VRAM)</span></div>
-                    <div class="info-row"><span>RAM:</span> <span>128 GB DDR5</span></div>
+                    <div class="info-row"><span>Хост / Сервер:</span> <span id="infraHost" style="color:#66d9ef; font-weight:600;">Определение...</span></div>
+                    <div class="info-row"><span>GPU:</span> <span id="infraGpu" style="color:#a6e22e; font-weight:600;">Определение...</span></div>
+                    <div class="info-row"><span>RAM:</span> <span id="infraRam">125 GB DDR5</span></div>
                     <div class="info-row"><span>Векторные эмбеддинги:</span> <span>BGE-M3 (1024-dim)</span></div>
-                    <div class="info-row"><span>Векторная БД:</span> <span>Qdrant (32 772 точки)</span></div>
+                    <div class="info-row"><span>Векторная БД:</span> <span id="infraPoints">Qdrant (32 796 точек)</span></div>
                     <div class="info-row"><span>Нейро-Реранкер:</span> <span>FlashRank Cross-Encoder</span></div>
                     <div class="info-row"><span>LLM-Судья (Fact-Check):</span> <span style="color:#a6e22e; font-weight:600;">Qwen 3.6 35B (NLI)</span></div>
                     <div class="info-row"><span>Конфиденциальность:</span> <span>100% On-Premise</span></div>
@@ -1140,7 +1319,86 @@
     </main>
 
     <script>
-        const API_BASE = window.location.origin;
+        const API_BASE = (window.location.protocol === 'file:' || !window.location.origin || window.location.origin === 'null')
+            ? 'http://192.168.152.74:8000'
+            : window.location.origin;
+
+        // Dynamic Model & Engine Badge Updater
+        function updateModelEngineBadge(vllmOnline = true) {
+            const sel = document.getElementById('modelSelect');
+            const badge = document.getElementById('engineBadge');
+            if (!sel || !badge) return;
+            const val = sel.value;
+            if (val.includes('qwen') && vllmOnline) {
+                badge.innerText = 'vLLM ⚡ 104 tok/s';
+                badge.style.background = 'rgba(166, 226, 46, 0.2)';
+                badge.style.color = '#a6e22e';
+                badge.style.borderColor = 'rgba(166, 226, 46, 0.4)';
+            } else if (val.includes('qwen') && !vllmOnline) {
+                badge.innerText = 'Ollama 🛡️ Резерв';
+                badge.style.background = 'rgba(230, 219, 116, 0.2)';
+                badge.style.color = '#e6db74';
+                badge.style.borderColor = 'rgba(230, 219, 116, 0.4)';
+            } else {
+                badge.innerText = 'Ollama 🛡️ Резерв';
+                badge.style.background = 'rgba(102, 217, 239, 0.2)';
+                badge.style.color = '#66d9ef';
+                badge.style.borderColor = 'rgba(102, 217, 239, 0.4)';
+            }
+        }
+
+        // Dynamic Server Telemetry Updater
+        async function updateServerTelemetry() {
+            try {
+                const res = await fetch(`${API_BASE}/health`);
+                if (res.ok) {
+                    const data = await res.json();
+                    const host = data.host || (window.location.hostname.includes('11171') || window.location.hostname === '192.168.152.74' ? 'c11171' : 'c14753');
+                    const gpu = data.hardware || 'NVIDIA RTX A6000 (48 GB VRAM)';
+                    const badgeText = document.getElementById('serverBadgeText');
+                    if (badgeText) {
+                        badgeText.innerText = `Сервер ${host} (${gpu.replace('NVIDIA ', '')})`;
+                    }
+                    const panelTitle = document.getElementById('infraPanelTitle');
+                    if (panelTitle) {
+                        panelTitle.innerText = `⚡ Инфраструктура ${host}`;
+                    }
+                    const hostSpan = document.getElementById('infraHost');
+                    if (hostSpan) {
+                        hostSpan.innerText = `${host} (${data.server_ip || window.location.hostname})`;
+                    }
+                    const gpuSpan = document.getElementById('infraGpu');
+                    if (gpuSpan) {
+                        gpuSpan.innerText = gpu;
+                    }
+                    const ptsSpan = document.getElementById('infraPoints');
+                    if (ptsSpan && data.indexed_points) {
+                        ptsSpan.innerText = `Qdrant (${Number(data.indexed_points).toLocaleString('ru-RU')} точек)`;
+                    }
+                }
+            } catch (err) {
+                console.warn('Telemetry fetch error:', err);
+                const isProd = window.location.hostname.includes('11171') || window.location.hostname === '192.168.152.74';
+                const badgeText = document.getElementById('serverBadgeText');
+                if (badgeText) {
+                    badgeText.innerText = isProd ? 'Сервер c11171 (RTX A6000 48GB)' : 'Сервер c14753 (CPU Staging)';
+                }
+            }
+
+            // Sync available models and engine status from API
+            try {
+                const modelRes = await fetch(`${API_BASE}/api/models`);
+                if (modelRes.ok) {
+                    const modelData = await modelRes.json();
+                    const isVllmOnline = !!modelData.vllm_online;
+                    updateModelEngineBadge(isVllmOnline);
+                }
+            } catch (err) {
+                console.warn('Models fetch error:', err);
+                updateModelEngineBadge(true);
+            }
+        }
+        updateServerTelemetry();
 
                                 let activeClarificationData = null;
         let clarifierDebounceTimer = null;
@@ -1285,6 +1543,215 @@
             if (e.key === 'Enter') sendQuery();
         }
 
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function extractThinkingAndAnswer(rawText) {
+            if (!rawText) return { thinking: '', answer: '', isThinking: false };
+
+            const trimmed = rawText.trim();
+
+            // Case 0: Closing </think> or </thinking> tag anywhere in the text
+            const closingTagRegex = /<\/(?:think|thinking)>\s*/i;
+            if (closingTagRegex.test(trimmed)) {
+                const parts = trimmed.split(/<\/(?:think|thinking)>\s*/i);
+                const thinkingRaw = parts.slice(0, -1).join('\n').replace(/^<(?:think|thinking)>/i, '').trim();
+                let answerRaw = parts[parts.length - 1].trim();
+                answerRaw = answerRaw.replace(/(?:\n\s*Check\s+citations\s+format:[\s\S]*)$/i, '').trim();
+                return {
+                    thinking: thinkingRaw.replace(/^(?:Here(?:\'s|\s+is)\s+a\s+thinking\s+process:?|Thinking\s+[Pp]rocess:?)\s*/i, '').trim(),
+                    answer: answerRaw,
+                    isThinking: false
+                };
+            }
+
+            // Case 1: Plaintext chain-of-thought starting with "Here's a thinking process:" or "Thinking process:"
+            const thinkStartRegex = /^(?:Here(?:\'s|\s+is)\s+a\s+thinking\s+process:?|Thinking\s+[Pp]rocess:?|###\s+Thinking\s+[Pp]rocess:?)\s*/i;
+            
+            if (thinkStartRegex.test(trimmed)) {
+                const contentAfter = trimmed.replace(thinkStartRegex, '');
+
+                // Look for transition to final answer:
+                const transPatterns = [
+                    /<\/(?:think|thinking)>\s*/i,
+                    /\n\s*(?:Final\s+[Aa]nswer|###?\s*Ответ|Ответ)\s*:\s*/i,
+                    /\n\s*Refine(?:d)?\s+draft\s*:\s*/i,
+                    /\n\s*Draft\s*(?:structure|response)?\s*:\s*/i,
+                    /\n\s*\d+\.\s+\*\*Draft\b[^\n]*\*\*:\s*/i,
+                    /\n+(?:\[Output Generation\][^\n]*\n+)?(?=(?:В предоставленных документах базы знаний|На основе предоставленных документов|Согласно предоставленн|В соответствии с|Для корпусов))/i,
+                    /\n+(?:===?\s*ОТВЕТ[^\n]*===?\n+)/i
+                ];
+
+                let bestIndex = -1;
+                let matchLength = 0;
+
+                for (const pat of transPatterns) {
+                    const m = contentAfter.match(pat);
+                    if (m && m.index !== undefined) {
+                        // Ensure match is not inside inline backtick quotes
+                        const prefix = contentAfter.slice(0, m.index);
+                        const backtickCount = (prefix.match(/`/g) || []).length;
+                        if (backtickCount % 2 === 0) {
+                            if (bestIndex === -1 || m.index < bestIndex) {
+                                bestIndex = m.index;
+                                matchLength = m[0].length;
+                            }
+                        }
+                    }
+                }
+
+                if (bestIndex !== -1) {
+                    let thinking = contentAfter.slice(0, bestIndex).trim();
+                    let answer = contentAfter.slice(bestIndex + matchLength).trim();
+                    
+                    // Strip any internal XML think tags from thinking text
+                    thinking = thinking.replace(/<\/?(?:think|thinking)>/gi, '').trim();
+
+                    // Strip any trailing self-checking notes from answer
+                    const checkMatch = answer.match(/(?:\n\s*Check\s+citations\s+format:[\s\S]*)$/i);
+                    if (checkMatch && checkMatch.index !== undefined) {
+                        thinking += "\n\n" + answer.slice(checkMatch.index).trim();
+                        answer = answer.slice(0, checkMatch.index).trim();
+                    }
+
+                    return { thinking: thinking, answer: answer, isThinking: false };
+                }
+
+                // Fallback: Look for first substantial block of Cyrillic text
+                const ruMatch = contentAfter.match(/\n(?=[А-Яа-яЁё][А-Яа-яЁё\s,.\-—–:\(\)«»"\'0-9]{30,})/);
+                if (ruMatch && ruMatch.index !== undefined) {
+                    return {
+                        thinking: contentAfter.slice(0, ruMatch.index).trim(),
+                        answer: contentAfter.slice(ruMatch.index).trim(),
+                        isThinking: false
+                    };
+                }
+
+                // If no transition found yet, EVERYTHING is thinking!
+                return {
+                    thinking: contentAfter.replace(/<\/?(?:think|thinking)>/gi, '').trim(),
+                    answer: '',
+                    isThinking: true
+                };
+            }
+
+            // Case 2: Standard <think> or <thinking> tag at the very start of the text
+            const startsWithTagRegex = /^<(think|thinking)>/i;
+            if (startsWithTagRegex.test(trimmed)) {
+                const tagMatch = trimmed.match(/^<(think|thinking)>([\s\S]*?)(?:<\/\1>|$)/i);
+                const hasClosed = /<\/(think|thinking)>/i.test(trimmed);
+                const thinking = tagMatch ? tagMatch[2].trim() : '';
+                const answer = trimmed.replace(/^<(think|thinking)>[\s\S]*?(?:<\/\1>|$)/i, '').trim();
+                return { thinking: thinking, answer: answer, isThinking: !hasClosed };
+            }
+
+            // Case 3: Standard normal response without explicit thinking
+            return {
+                thinking: '',
+                answer: rawText,
+                isThinking: false
+            };
+        }
+
+        function transformInlineCitations(htmlText, sources) {
+            if (!sources || sources.length === 0) return htmlText;
+            return htmlText.replace(/\[(?:ИСТОЧНИК|SOURCE|Источник)\s*#?(\d+)(?::\s*([^\]]*))?\]/gi, (match, srcIdx, customTitle) => {
+                const idx = parseInt(srcIdx, 10) - 1;
+                const src = sources[idx] || sources[0];
+                if (src) {
+                    const loc = src.page ? `Стр. ${src.page}` : (src.sheet ? `Лист: ${src.sheet}` : 'Стр. 1');
+                    let docUrl = src.verification_link;
+                    if (!docUrl || docUrl.startsWith('file:')) {
+                        docUrl = `${API_BASE}/api/documents/preview/${encodeURIComponent(src.source)}` + (src.page ? `?page=${src.page}#page=${src.page}` : '');
+                    } else if (docUrl.startsWith('http://') || docUrl.startsWith('https://')) {
+                        try {
+                            const parsed = new URL(docUrl);
+                            docUrl = `${API_BASE}${parsed.pathname}${parsed.search}${parsed.hash}`;
+                        } catch(e) {}
+                    } else if (docUrl.startsWith('/')) {
+                        docUrl = `${API_BASE}${docUrl}`;
+                    }
+                    const label = customTitle ? customTitle.trim() : `${src.source} (${loc})`;
+                    return `<a href="${docUrl}" class="inline-citation-badge" data-doc-title="${encodeURIComponent(src.source)}" onclick="event.preventDefault(); openDocumentViewer('${docUrl}', '${src.source}', '${src.page || 1}')">📄 [${srcIdx}] ${label}</a>`;
+                }
+                return `<span class="inline-citation-badge">${match}</span>`;
+            });
+        }
+
+        function renderResponseContent(container, fullRawText, isStreaming = true, sources = []) {
+            const { thinking, answer, isThinking } = extractThinkingAndAnswer(fullRawText);
+
+            // 1. Manage Thought Box in-place
+            let thoughtBox = container.querySelector('.thought-box');
+            if (thinking) {
+                const statusHtml = isThinking
+                    ? `<span class="thought-status pulse">⚡ размышляет...</span>`
+                    : `<span class="thought-status done">✓ завершено</span>`;
+
+                if (!thoughtBox) {
+                    thoughtBox = document.createElement('details');
+                    thoughtBox.className = 'thought-box';
+                    thoughtBox.innerHTML = `
+                        <summary class="thought-summary">
+                            <span>🧠</span>
+                            <span><b>Ход рассуждений модели</b> (Thinking Process)</span>
+                            <span class="thought-status-container">${statusHtml}</span>
+                        </summary>
+                        <div class="thought-body">${escapeHtml(thinking)}</div>
+                    `;
+                    const existingAnswer = container.querySelector('.answer-content');
+                    if (existingAnswer) {
+                        container.insertBefore(thoughtBox, existingAnswer);
+                    } else {
+                        container.appendChild(thoughtBox);
+                    }
+                } else {
+                    const statusContainer = thoughtBox.querySelector('.thought-status-container');
+                    if (statusContainer) statusContainer.innerHTML = statusHtml;
+                    const thoughtBody = thoughtBox.querySelector('.thought-body');
+                    if (thoughtBody && thoughtBody.textContent !== thinking) {
+                        thoughtBody.textContent = thinking;
+                    }
+                }
+            } else if (thoughtBox) {
+                thoughtBox.remove();
+            }
+
+            // 2. Manage Answer Content in-place
+            let answerEl = container.querySelector('.answer-content');
+            if (!answerEl) {
+                answerEl = document.createElement('div');
+                answerEl.className = 'answer-content';
+                container.appendChild(answerEl);
+            }
+
+            if (answer) {
+                let answerHtml = '';
+                if (typeof marked !== 'undefined') {
+                    answerHtml = marked.parse(answer);
+                } else {
+                    answerHtml = escapeHtml(answer).replace(/\n/g, '<br>');
+                }
+                if (!isStreaming && sources && sources.length > 0) {
+                    answerHtml = transformInlineCitations(answerHtml, sources);
+                }
+                answerEl.innerHTML = answerHtml;
+            } else if (isStreaming && isThinking) {
+                answerEl.innerHTML = `<div style="color:var(--text-muted); font-size:13px; font-style:italic; padding:6px 0;">⚡ Формирование инженерного ответа...</div>`;
+            } else if (!isStreaming && thinking && !answer) {
+                answerEl.innerHTML = `<div style="color:#fd971f; font-size:13px; padding:10px 14px; background:rgba(253,151,31,0.08); border-radius:8px; border:1px solid rgba(253,151,31,0.25);">⚠️ Модель сформировала анализ, но не успела завершить вывод итогового ответа. Разверните блок рассуждений выше для просмотра анализа.</div>`;
+            } else {
+                answerEl.innerHTML = '';
+            }
+        }
+
         async function sendQuery() {
             const input = document.getElementById('userInput');
             const query = input.value.trim();
@@ -1329,10 +1796,16 @@
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
             try {
+                const deepReasoning = document.getElementById('reasoningToggle')?.checked || false;
                 const response = await fetch(`${API_BASE}/api/query/stream`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query: query, model: model, top_k: 5 })
+                    body: JSON.stringify({
+                        query: query,
+                        model: model,
+                        top_k: 5,
+                        deep_reasoning: deepReasoning
+                    })
                 });
 
                 if (!response.ok) {
@@ -1347,16 +1820,25 @@
                 let rewriteInfo = null;
                 let suggestionsList = [];
                 let isFirstToken = true;
+                let buffer = '';
+                let currentEvent = null;
 
-                while (true) {
+                let isDone = false;
+                while (!isDone) {
                     const { value, done } = await reader.read();
                     if (done) break;
 
-                    const chunk = decoder.decode(value, { stream: true });
-                    const lines = chunk.split('\n');
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop(); // Keep trailing incomplete line in buffer
 
-                    let currentEvent = null;
-                    for (const line of lines) {
+                    for (const rawLine of lines) {
+                        const line = rawLine.trim();
+                        if (!line) {
+                            currentEvent = null;
+                            continue;
+                        }
+
                         if (line.startsWith('event:')) {
                             currentEvent = line.replace('event:', '').trim();
                         } else if (line.startsWith('data:')) {
@@ -1365,7 +1847,16 @@
 
                             try {
                                 const parsed = JSON.parse(dataStr);
-                                if (currentEvent === 'progress') {
+                                if (currentEvent === 'error') {
+                                    const errMsg = parsed.error || 'Неизвестная ошибка сервера';
+                                    const fillEl = progressCard.querySelector('#progressFill');
+                                    const labelEl = progressCard.querySelector('#progressLabel');
+                                    if (fillEl) fillEl.style.backgroundColor = '#ef4444';
+                                    if (labelEl) labelEl.innerHTML = `❌ ${errMsg}`;
+                                    textContainer.innerHTML = `<div style="color:#ef4444; padding:12px; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.25); border-radius:8px; margin-top:8px;">⚠️ <b>Ошибка формирования ответа:</b> ${errMsg}</div>`;
+                                    isDone = true;
+                                    break;
+                                } else if (currentEvent === 'progress') {
                                     const fillEl = progressCard.querySelector('#progressFill');
                                     const labelEl = progressCard.querySelector('#progressLabel');
                                     const pctEl = progressCard.querySelector('#progressPercent');
@@ -1393,6 +1884,9 @@
                                     sourcesList = Array.isArray(parsed) ? parsed : [];
                                 } else if (currentEvent === 'verification') {
                                     judgeVerdict = parsed;
+                                } else if (currentEvent === 'done') {
+                                    isDone = true;
+                                    break;
                                 } else if (currentEvent === 'suggestions') {
                                     suggestionsList = parsed.suggestions || [];
                                 } else if (currentEvent === 'token' && parsed.token) {
@@ -1405,11 +1899,7 @@
                                         setTimeout(() => { progressCard.style.display = 'none'; }, 400);
                                     }
                                     accumulatedText += parsed.token;
-                                    if (typeof marked !== 'undefined') {
-                                        textContainer.innerHTML = marked.parse(accumulatedText);
-                                    } else {
-                                        textContainer.innerHTML = accumulatedText.replace(/\n/g, '<br>');
-                                    }
+                                    renderResponseContent(textContainer, accumulatedText, true, sourcesList);
                                     messagesDiv.scrollTop = messagesDiv.scrollHeight;
                                 }
                             } catch (e) {
@@ -1419,30 +1909,8 @@
                     }
                 }
 
-                // Transform inline citations into 1-click interactive badges
-                function transformInlineCitations(htmlText, sources) {
-                    if (!sources || sources.length === 0) return htmlText;
-                    return htmlText.replace(/\[(?:ИСТОЧНИК|SOURCE|Источник)\s*#?(\d+)(?::\s*([^\]]*))?\]/gi, (match, srcIdx, customTitle) => {
-                        const idx = parseInt(srcIdx, 10) - 1;
-                        const src = sources[idx] || sources[0];
-                        if (src) {
-                            const loc = src.page ? `Стр. ${src.page}` : (src.sheet ? `Лист: ${src.sheet}` : 'Стр. 1');
-                            let docUrl = src.verification_link;
-                            if (!docUrl || docUrl.startsWith('file:')) {
-                                docUrl = `${API_BASE}/api/documents/${encodeURIComponent(src.source)}` + (src.page ? `#page=${src.page}` : '');
-                            }
-                            const label = customTitle ? customTitle.trim() : `${src.source} (${loc})`;
-                            return `<a href="${docUrl}" class="inline-citation-badge" onclick="event.preventDefault(); openDocumentViewer('${docUrl}', '${src.source}', '${src.page || 1}')">📄 [${srcIdx}] ${label}</a>`;
-                        }
-                        return `<span class="inline-citation-badge">${match}</span>`;
-                    });
-                }
-
-                // Final markdown render pass to ensure clean closing tags & interactive links
-                if (typeof marked !== 'undefined' && accumulatedText) {
-                    const rawHtml = marked.parse(accumulatedText);
-                    textContainer.innerHTML = transformInlineCitations(rawHtml, sourcesList);
-                }
+                // Final render pass to ensure clean closing tags, collapsed thought box & interactive citation links
+                renderResponseContent(textContainer, accumulatedText, false, sourcesList);
 
                 // Render LLM-as-a-Judge Badge
                 if (judgeVerdict) {
@@ -1512,7 +1980,11 @@
                 }
 
             } catch (err) {
-                textContainer.innerHTML = `<span style="color:#ef4444;">❌ Ошибка обращения к серверу GASlight-Me: ${err.message}</span>`;
+                const fillEl = progressCard.querySelector('#progressFill');
+                const labelEl = progressCard.querySelector('#progressLabel');
+                if (fillEl) fillEl.style.backgroundColor = '#ef4444';
+                if (labelEl) labelEl.innerHTML = `❌ Ошибка запроса`;
+                textContainer.innerHTML = `<div style="color:#ef4444; padding:12px; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.25); border-radius:8px; margin-top:8px;">❌ <b>Ошибка обращения к серверу GAS-RAG:</b> ${err.message}</div>`;
             }
         }
 
@@ -1525,24 +1997,81 @@
         }
 
         async function uploadDocument(e) {
-            const file = e.target.files[0];
-            if (!file) return;
+            const files = e.target.files;
+            if (!files || files.length === 0) return;
 
             const status = document.getElementById('uploadStatus');
-            status.innerText = `⏳ Индексация файла ${file.name}...`;
+            const total = files.length;
+            let successCount = 0;
+            let lastTotalIndex = 0;
+            let failedFiles = [];
 
-            const formData = new FormData();
-            formData.append('file', file);
+            // Disable input while processing
+            e.target.disabled = true;
+            document.querySelector('.upload-box').style.opacity = '0.5';
+            document.querySelector('.upload-box').style.cursor = 'not-allowed';
 
-            try {
-                const res = await fetch(`${API_BASE}/api/ingest`, {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await res.json();
-                status.innerText = `✅ Файл ${data.filename} успешно добавлен! Сэмплов в индексе: ${data.total_index_size}`;
-            } catch (err) {
-                status.innerText = `❌ Ошибка загрузки файла.`;
+            for (let i = 0; i < total; i++) {
+                const file = files[i];
+                status.innerHTML = `⌛ Обработка файла ${i + 1} из ${total}: <b>${file.name}</b>...`;
+
+                const formData = new FormData();
+                formData.append('file', file);
+
+                try {
+                    const res = await fetch(`${API_BASE}/api/ingest`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const data = await res.json();
+                    
+                    if (data.status === 'queued') {
+                        status.innerHTML = `⌛ Файл <b>${file.name}</b> поставлен в фоновую очередь...`;
+                        
+                        // Poll for status
+                        let isComplete = false;
+                        while (!isComplete) {
+                            await new Promise(r => setTimeout(r, 2000));
+                            try {
+                                const stRes = await fetch(`${API_BASE}/api/ingest/status`);
+                                const stData = await stRes.json();
+                                const fileStatus = stData[data.filename];
+                                if (fileStatus) {
+                                    if (fileStatus.status === 'processing') {
+                                        status.innerHTML = `⌛ Обработка <b>${file.name}</b> (${i+1}/${total}): <span style="color:#66d9ef">${fileStatus.progress}%</span>`;
+                                    } else if (fileStatus.status === 'completed') {
+                                        successCount++;
+                                        isComplete = true;
+                                    } else if (fileStatus.status === 'error') {
+                                        console.error('Background error:', fileStatus.message);
+                                        failedFiles.push(`${file.name} (Ошибка парсинга)`);
+                                        isComplete = true; // Move on
+                                    }
+                                }
+                            } catch(e) {}
+                        }
+                    } else {
+                        successCount++;
+                        if (data.total_points_in_db) lastTotalIndex = data.total_points_in_db;
+                    }
+                } catch (err) {
+                    console.error('Upload error for', file.name, err);
+                    failedFiles.push(`${file.name} (Сбой сети)`);
+                }
+            }
+            
+            // Restore input
+            e.target.disabled = false;
+            e.target.value = '';
+            document.querySelector('.upload-box').style.opacity = '1';
+            document.querySelector('.upload-box').style.cursor = 'pointer';
+
+            if (successCount === total) {
+                status.innerHTML = `✅ Успешно добавлено файлов: <b>${total}</b>.<br>Всего сэмплов в базе: ${lastTotalIndex}`;
+            } else {
+                let errorHtml = `⚠️ Добавлено ${successCount} из ${total} файлов.<br><span style="color:#f92672;">❌ Ошибки: ${failedFiles.join(', ')}</span>`;
+                status.innerHTML = errorHtml;
             }
         }
 
@@ -1558,14 +2087,17 @@
         let autoRotate = true;
         let animFrameId = null;
 
-        function getCategoryColor(docType) {
+        function getCategoryColor(docType, source) {
             const dt = (docType || '').toLowerCase();
-            if (dt.includes('bom') || dt.includes('ведомость')) return '#a6e22e'; // Green
-            if (dt.includes('gost') || dt.includes('гост') || dt.includes('iso')) return '#66d9ef'; // Cyan/Blue
-            if (dt.includes('dfmea') || dt.includes('fmea') || dt.includes('риск')) return '#f97316'; // Orange
-            if (dt.includes('газпром') || dt.includes('сто')) return '#a855f7'; // Purple
-            if (dt.includes('дефект') || dt.includes('акт') || dt.includes('отчет')) return '#eab308'; // Yellow
-            return '#ec4899'; // Pink
+            const src = (source || '').toLowerCase();
+            const combined = dt + ' ' + src;
+
+            if (combined.includes('bom') || combined.includes('ведомость')) return '#a6e22e'; // Green
+            if (combined.includes('dfmea') || combined.includes('fmea') || combined.includes('риск')) return '#f97316'; // Orange
+            if (combined.includes('газпром') || combined.includes('сто') || combined.includes('sto')) return '#a855f7'; // Purple
+            if (combined.includes('дефект') || combined.includes('акт') || combined.includes('отчет') || combined.includes('рд') || combined.includes('dn300')) return '#eab308'; // Yellow
+            if (combined.includes('gost') || combined.includes('гост') || combined.includes('iso') || combined.includes('73997')) return '#66d9ef'; // Cyan/Blue
+            return '#66d9ef'; // Default Cyan/Blue for standards
         }
 
         async function openGraphModal() {
@@ -1766,7 +2298,7 @@
                 projected.push({
                     node: n,
                     sx, sy, z2, scale,
-                    color: getCategoryColor(n.doc_type)
+                    color: getCategoryColor(n.doc_type, n.source)
                 });
             }
 
@@ -1876,12 +2408,36 @@
             renderStatsModalContent();
         }
 
+        
+        async function scanAndProcessRaw() {
+            try {
+                const res = await fetch(`${API_BASE}/api/admin/unprocessed`);
+                const data = await res.json();
+                if (data.count === 0) {
+                    alert("Нет необработанных файлов в папке raw.");
+                    return;
+                }
+                
+                if (confirm(`Найдено ${data.count} необработанных файлов:\n${data.unprocessed.slice(0, 5).join(', ')}${data.count > 5 ? '\nи другие...' : ''}\n\nЗапустить их фоновую обработку?`)) {
+                    const pRes = await fetch(`${API_BASE}/api/admin/process_unprocessed`, {method: 'POST'});
+                    const pData = await pRes.json();
+                    alert(pData.message + "\nОтслеживайте статус в логах.");
+                }
+            } catch(e) {
+                alert("Ошибка: " + e.message);
+            }
+        }
+
+        function viewLogs() {
+            window.open(`${API_BASE}/api/admin/logs`, '_blank');
+        }
+
         function renderStatsModalContent() {
             const container = document.getElementById('statsContent');
             const data = cachedStatsData || {};
             const analytics = cachedAnalyticsData || {};
             const kpis = analytics.kpis || {};
-            const bestUp = kpis.best_uploader || { name: 'Lead-Engineer', uploads_count: 7, total_mb: 420.0 };
+            const bestUp = kpis.best_uploader || { name: 'SeyfetdinovRB', uploads_count: 7, total_mb: 420.0 };
 
             // Tab bar HTML with Refresh Button
             const tabBarHtml = `
@@ -1895,6 +2451,12 @@
                         </button>
                     </div>
                     <div style="display:flex; align-items:center; gap:10px;">
+                        <button class="graph-btn" style="padding:7px 16px; font-size:12px; font-weight:600; background:#3e3d32; border-color:#fd971f; color:#fd971f; cursor:pointer;" onclick="scanAndProcessRaw()">
+                            🔄 Сканировать Raw
+                        </button>
+                        <button class="graph-btn" style="padding:7px 16px; font-size:12px; font-weight:600; background:#3e3d32; border-color:#a6e22e; color:#a6e22e; cursor:pointer;" onclick="viewLogs()">
+                            📄 Логи (Ошибки)
+                        </button>
                         <button class="graph-btn" style="padding:7px 16px; font-size:12px; font-weight:600; background:#3e3d32; border-color:#66d9ef; color:#66d9ef; display:inline-flex; align-items:center; gap:6px; cursor:pointer;" onclick="refreshStatsData()">
                             <span class="stats-refresh-icon" style="display:inline-block; transition:transform 0.5s ease;">🔄</span> Обновить данные
                         </button>
@@ -1903,7 +2465,7 @@
             `;
 
             if (currentStatsTab === 'analytics') {
-                const bestAsk = kpis.best_asker || { name: 'IP: 127.0.0.1', query_count: 25, avg_latency_sec: 1.25 };
+                const bestAsk = kpis.best_asker || { name: 'IP: 192.168.153.29', query_count: 25, avg_latency_sec: 1.25 };
                 // Render Analytics Tab
                 const qHist = analytics.queries_history || [];
                 const maxQ = Math.max(...qHist.map(h => h.count), 1);
@@ -2079,6 +2641,9 @@
                                 <button class="graph-btn" style="padding:5px 12px; font-size:11px; background:rgba(230,219,116,0.15); border-color:#e6db74; color:#e6db74;" onclick="openDocumentViewer('${API_BASE}/api/documents/markdown-preview/${encodeURIComponent(f.name)}', '${f.name}')">
                                     📝 Верификация MD
                                 </button>
+                                <button class="graph-btn btn-delete" style="padding:5px 12px; font-size:11px;" onclick="deleteDocument('${encodeURIComponent(f.name)}')">
+                                    🗑️ Удалить
+                                </button>
                             </td>
                         </tr>
                     `;
@@ -2103,9 +2668,10 @@
                             <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">PDF, XLSX, DOCX, TXT</div>
                         </div>
                         <div style="background:rgba(39,40,34,0.9); border:1px solid rgba(168,85,247,0.3); border-radius:12px; padding:16px;">
-                            <div style="font-size:12px; color:var(--text-muted);">Аппаратная Платформа & Судья</div>
+                            <div style="font-size:12px; color:var(--text-muted);">Аппаратная Платформа & Движок</div>
                             <div style="font-size:15px; font-weight:700; color:#ae81ff; margin-top:4px;">RTX A6000 (48GB)</div>
                             <div style="font-size:11px; color:#a6e22e; margin-top:4px;">⚖️ Судья: ${data.judge_model || 'Qwen 3.6 35B'}</div>
+                            <div style="font-size:11px; color:#66d9ef; margin-top:3px;">⚡ ${data.llm_engine || 'vLLM PagedAttention'}</div>
                         </div>
                     </div>
 
@@ -2120,7 +2686,7 @@
                                     <th style="padding:10px 12px;">Формат</th>
                                     <th style="padding:10px 12px;">Категория</th>
                                     <th style="padding:10px 12px;">Размер</th>
-                                    <th style="padding:10px 12px; width:260px;">Верификация & Просмотр</th>
+                                    <th style="padding:10px 12px; width:340px;">Действия & Просмотр</th>
                                 </tr>
                             </thead>
                             <tbody>${rowsHtml}</tbody>
@@ -2134,6 +2700,31 @@
             const modal = document.getElementById('statsModal');
             if (modal) {
                 modal.style.display = 'none';
+            }
+        }
+
+        async function deleteDocument(encodedName) {
+            const filename = decodeURIComponent(encodedName);
+            const confirmed = confirm(`⚠️ Внимание! Вы уверены, что хотите удалить документ:\n\n"${filename}"?\n\nФайл будет безвозвратно удалён с сервера, а также будут удалены все его векторы из базы знаний Qdrant.`);
+            if (!confirmed) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/documents/${encodedName}`, {
+                    method: 'DELETE'
+                });
+                const data = await res.json();
+                if (res.ok && data.status === 'success') {
+                    alert(`✅ Документ "${filename}" успешно удален!\nУдалено векторных точек из Qdrant: ${data.deleted_points || 0}`);
+                    graphNodes = [];
+                    await refreshStatsData();
+                    if (typeof updateServerTelemetry === 'function') {
+                        updateServerTelemetry();
+                    }
+                } else {
+                    alert(`❌ Ошибка удаления: ${data.detail || data.message || 'Не удалось удалить документ'}`);
+                }
+            } catch (err) {
+                alert(`❌ Ошибка при отправке запроса: ${err.message}`);
             }
         }
 
@@ -2153,10 +2744,20 @@
             if (!targetUrl) {
                 targetUrl = `${API_BASE}/api/documents/preview/${encodeURIComponent(rawName)}`;
             }
+            // Normalize absolute URLs to current host (API_BASE)
+            if (targetUrl.startsWith('http://') || targetUrl.startsWith('https://')) {
+                try {
+                    const parsed = new URL(targetUrl);
+                    targetUrl = `${API_BASE}${parsed.pathname}${parsed.search}${parsed.hash}`;
+                } catch(e) {}
+            }
             if (targetUrl.includes('/api/documents/') && !targetUrl.includes('/api/documents/preview/') && !targetUrl.includes('/api/documents/markdown-preview/')) {
                 targetUrl = targetUrl.replace('/api/documents/', '/api/documents/preview/');
             }
-            if (page && !targetUrl.includes('#page=')) {
+            if (page && !targetUrl.includes('page=')) {
+                const sep = targetUrl.includes('?') ? '&' : '?';
+                targetUrl += `${sep}page=${page}#page=${page}`;
+            } else if (page && !targetUrl.includes('#page=')) {
                 targetUrl += `#page=${page}`;
             }
 
@@ -2187,12 +2788,133 @@
             }
         });
 
+        /* --- GRAPHIFY KNOWLEDGE & CODEBASE MODAL LOGIC --- */
+        let currentGraphifyTab = 'knowledge';
+
+        async function openGraphifyModal() {
+            const modal = document.getElementById('graphifyModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                switchGraphifyTab(currentGraphifyTab);
+                loadGraphifyStats();
+            }
+        }
+
+        function closeGraphifyModal() {
+            const modal = document.getElementById('graphifyModal');
+            if (modal) modal.style.display = 'none';
+            const guide = document.getElementById('graphifyGuidePanel');
+            if (guide) guide.style.display = 'none';
+        }
+
+        function toggleGraphifyGuide(forceOpen = null) {
+            const guide = document.getElementById('graphifyGuidePanel');
+            if (!guide) return;
+            if (forceOpen === true) {
+                guide.style.display = 'block';
+            } else if (forceOpen === false) {
+                guide.style.display = 'none';
+            } else {
+                guide.style.display = (guide.style.display === 'block') ? 'none' : 'block';
+            }
+        }
+
+        function switchGraphifyTab(tab) {
+            currentGraphifyTab = tab;
+            const frame = document.getElementById('graphifyFrame');
+            const newTabLink = document.getElementById('graphifyOpenNewTab');
+            const desc = document.getElementById('graphifyDesc');
+            
+            const btnKg = document.getElementById('tabKgBtn');
+            const btnCode = document.getElementById('tabCodeBtn');
+            const btnTree = document.getElementById('tabTreeBtn');
+
+            if (!frame || !btnKg || !btnCode || !btnTree) return;
+
+            // Reset active styles
+            [btnKg, btnCode, btnTree].forEach(b => {
+                b.style.background = 'transparent';
+                b.style.color = '#f8f8f2';
+                b.style.borderColor = 'transparent';
+                b.style.fontWeight = '400';
+            });
+
+            if (tab === 'knowledge') {
+                btnKg.style.background = '#ae81ff';
+                btnKg.style.color = '#1e1f1c';
+                btnKg.style.borderColor = '#ae81ff';
+                btnKg.style.fontWeight = '600';
+                frame.src = `${API_BASE}/api/graph/knowledge`;
+                newTabLink.href = `${API_BASE}/api/graph/knowledge`;
+                desc.innerHTML = '🔗 <b>Онтологии Стандартов:</b> Семантическая сеть связей между ГОСТ 6111, ISO 5211, BOM дископоворотного затвора, матрицей DFMEA и актами дефектовки.';
+            } else if (tab === 'codebase') {
+                btnCode.style.background = '#66d9ef';
+                btnCode.style.color = '#1e1f1c';
+                btnCode.style.borderColor = '#66d9ef';
+                btnCode.style.fontWeight = '600';
+                frame.src = `${API_BASE}/api/graph/codebase`;
+                newTabLink.href = `${API_BASE}/api/graph/codebase`;
+                desc.innerHTML = '💻 <b>Архитектура Кода RAG:</b> Синтаксический граф классов, функций, методов и вызовов модулей (retriever, generator, indexer, judge, rewriter).';
+            } else if (tab === 'tree') {
+                btnTree.style.background = '#a6e22e';
+                btnTree.style.color = '#1e1f1c';
+                btnTree.style.borderColor = '#a6e22e';
+                btnTree.style.fontWeight = '600';
+                frame.src = `${API_BASE}/api/graph/codebase/tree`;
+                newTabLink.href = `${API_BASE}/api/graph/codebase/tree`;
+                desc.innerHTML = '🌳 <b>Иерархическое Дерево Архитектуры:</b> Сворачиваемая D3-структура зависимостей и вызовов между компонентами GAS-RAG.';
+            }
+        }
+
+        async function loadGraphifyStats() {
+            try {
+                const res = await fetch(`${API_BASE}/api/graph/summary`);
+                if (res.ok) {
+                    const data = await res.json();
+                    let statsText = '';
+                    if (data.codebase) {
+                        statsText += `Код: ${data.codebase.nodes} узлов, ${data.codebase.edges} связей`;
+                    }
+                    if (data.knowledge) {
+                        if (statsText) statsText += ' | ';
+                        statsText += `Онтологии: ${data.knowledge.nodes} концептов, ${data.knowledge.edges} связей`;
+                    }
+                    const badge = document.getElementById('graphifyStatsBadge');
+                    if (badge) badge.innerText = statsText || 'Графы активны';
+                }
+            } catch (e) {
+                const badge = document.getElementById('graphifyStatsBadge');
+                if (badge) badge.innerText = 'Graphify Active';
+            }
+        }
+
+        async function triggerGraphifyRefresh() {
+            const btn = document.getElementById('graphifyRefreshBtn');
+            const badge = document.getElementById('graphifyStatsBadge');
+            if (btn) btn.innerText = '⏳ Синхронизация...';
+            if (badge) badge.innerText = 'Фоновое обновление графа...';
+            try {
+                const res = await fetch(`${API_BASE}/api/graph/refresh`, { method: 'POST' });
+                if (res.ok) {
+                    setTimeout(() => {
+                        loadGraphifyStats();
+                        const frame = document.getElementById('graphifyFrame');
+                        if (frame && frame.contentWindow) frame.contentWindow.location.reload();
+                        if (btn) btn.innerText = '🔄 Синхронизировать';
+                    }, 5000);
+                }
+            } catch (e) {
+                if (btn) btn.innerText = '🔄 Синхронизировать';
+            }
+        }
+
         // Close modals on ESC
         window.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeDocViewerModal();
                 closeStatsModal();
                 closeGraphModal();
+                closeGraphifyModal();
             }
         });
     </script>
@@ -2250,6 +2972,11 @@
                     • <b>Масштаб</b>: Колесико мыши (Zoom In/Out).<br>
                     • <b>Сдвиг (Pan)</b>: Удерживайте <code>Shift</code> + левая кнопка мыши.<br>
                     • <b>Поиск</b>: Введите слово в поле поиска сверху — подходящие узлы загорятся ярким золотом.</p>
+
+                    <p style="border-top:1px solid rgba(56,189,248,0.2); padding-top:8px; margin-top:10px;">
+                        💡 <b>Нужны логические связи и зависимости стандартов?</b><br>
+                        Откройте <a href="javascript:void(0)" onclick="closeGraphModal(); openGraphifyModal();" style="color:#ae81ff; text-decoration:underline; font-weight:600;">🕸️ Сеть Связей & Архитектуру (Graphify)</a>, чтобы исследовать сущности, регламенты и онтологии в виде соединённого графа.
+                    </p>
                 </div>
             </div>
         </div>
@@ -2286,6 +3013,192 @@
             </div>
             <div style="flex:1; width:100%; height:100%; position:relative; background:#272822;">
                 <iframe id="docViewerFrame" src="about:blank" style="width:100%; height:100%; border:none; background:#272822;"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- GRAPHIFY KNOWLEDGE & CODEBASE MODAL -->
+    <div id="graphifyModal" class="graph-modal-backdrop" onclick="if(event.target===this) closeGraphifyModal()" style="display:none; z-index:9998;">
+        <div class="graph-modal-content" style="width:94vw; height:93vh; padding:0; display:flex; flex-direction:column; background:#1e1f1c; border:1px solid rgba(174,129,255,0.35); box-shadow:0 0 50px rgba(0,0,0,0.95); border-radius:12px; overflow:hidden;">
+            <div class="graph-modal-header" style="background:#181915; padding:12px 24px; border-bottom:1px solid rgba(248,248,242,0.12); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+                    <div class="graph-modal-title" style="font-size:16px; color:#ae81ff; font-weight:700; display:flex; align-items:center; gap:8px;">
+                        🕸️ Сеть Связей & Архитектура (Graphify)
+                    </div>
+                    <!-- Mode Tabs -->
+                    <div style="display:flex; gap:6px; background:rgba(0,0,0,0.4); padding:4px; border-radius:8px; border:1px solid rgba(255,255,255,0.08);">
+                        <button id="tabKgBtn" class="graph-btn" style="padding:5px 14px; font-size:12px; background:#ae81ff; color:#1e1f1c; border-color:#ae81ff; font-weight:600;" onclick="switchGraphifyTab('knowledge')">
+                            📑 Онтологии Стандартов
+                        </button>
+                        <button id="tabCodeBtn" class="graph-btn" style="padding:5px 14px; font-size:12px; background:transparent; color:#f8f8f2; border-color:transparent;" onclick="switchGraphifyTab('codebase')">
+                            💻 Архитектура Кода RAG
+                        </button>
+                        <button id="tabTreeBtn" class="graph-btn" style="padding:5px 14px; font-size:12px; background:transparent; color:#f8f8f2; border-color:transparent;" onclick="switchGraphifyTab('tree')">
+                            🌳 Дерево Зависимостей
+                        </button>
+                    </div>
+                </div>
+
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <span id="graphifyStatsBadge" style="font-size:12px; color:#a6e22e; font-weight:500;">Графы активны</span>
+                    <button id="graphifyGuideBtn" class="graph-btn" style="padding:5px 12px; font-size:12px; color:#66d9ef; border-color:rgba(102,217,239,0.4); display:flex; align-items:center; gap:4px;" onclick="toggleGraphifyGuide()">
+                        📖 Инструкция
+                    </button>
+                    <button id="graphifyRefreshBtn" class="graph-btn" style="padding:5px 12px; font-size:12px; color:#a6e22e; border-color:rgba(166,226,46,0.4); display:flex; align-items:center; gap:4px;" onclick="triggerGraphifyRefresh()">
+                        🔄 Синхронизировать
+                    </button>
+                    <a id="graphifyOpenNewTab" href="/api/graph/knowledge" target="_blank" class="graph-btn" style="text-decoration:none; padding:5px 12px; font-size:12px; color:#66d9ef; border-color:#66d9ef; display:flex; align-items:center; gap:4px;">
+                        ↗️ В новой вкладке
+                    </a>
+                    <button class="graph-close-btn" onclick="closeGraphifyModal()" style="font-size:24px; color:#8f908a; background:none; border:none; cursor:pointer;">&times;</button>
+                </div>
+            </div>
+
+            <!-- Context Description -->
+            <div style="background:#272822; padding:8px 24px; border-bottom:1px solid rgba(248,248,242,0.08); font-size:12px; color:#8f908a; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div id="graphifyDesc">
+                    🔗 <b>Онтологии Стандартов:</b> Семантическая сеть связей между ГОСТ 6111, ISO 5211, BOM дископоворотного затвора, матрицей DFMEA и актами дефектовки.
+                </div>
+                <div style="font-size:11px; color:#66d9ef;">
+                    💡 Подсказка: колесико мыши — зум, клик — детали узла, перетаскивание узлов, поиск в графе
+                </div>
+            </div>
+
+            <!-- Arrow Direction Legend Bar -->
+            <div style="background:#181915; padding:8px 24px; border-bottom:1px solid rgba(248,248,242,0.1); font-size:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                    <span style="font-weight:700; color:#66d9ef;">➡️ Значение стрелок:</span>
+                    <span style="background:rgba(102,217,239,0.15); border:1px solid rgba(102,217,239,0.3); padding:2px 8px; border-radius:4px; color:#66d9ef; font-weight:600;">[Источник нормы / документа]</span>
+                    <span style="color:#ae81ff; font-weight:700;">──(регламентирует / включает)──▶</span>
+                    <span style="background:rgba(166,226,46,0.15); border:1px solid rgba(166,226,46,0.3); padding:2px 8px; border-radius:4px; color:#a6e22e; font-weight:600;">[Узел / Деталь / Дефект]</span>
+                </div>
+                <div style="font-size:11px; color:#e6db74;">
+                    💡 Кликните по узлу: панель справа раздельно покажет исходящие ➡️ и входящие ⬅️ требования
+                </div>
+            </div>
+
+            <!-- Interactive Graph Frame -->
+            <div style="flex:1; width:100%; height:100%; position:relative; background:#1e1f1c;">
+                <iframe id="graphifyFrame" src="/api/graph/knowledge" style="width:100%; height:100%; border:none; background:#1e1f1c;"></iframe>
+                
+                <!-- INSTRUCTION GUIDE PANEL FOR GRAPHIFY -->
+                <div id="graphifyGuidePanel" style="display:none; position:absolute; top:16px; right:16px; width:500px; max-height:86%; background:rgba(24,25,21,0.97); border:1px solid #ae81ff; border-radius:12px; padding:20px; color:#f8f8f2; font-size:12.5px; line-height:1.65; overflow-y:auto; box-shadow:0 0 40px rgba(0,0,0,0.95); z-index:1100; backdrop-filter:blur(14px);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid rgba(174,129,255,0.35); padding-bottom:8px;">
+                        <span style="font-weight:700; color:#ae81ff; font-size:15px; display:flex; align-items:center; gap:8px;">
+                            📖 Руководство: Сеть Связей & Архитектура
+                        </span>
+                        <button onclick="toggleGraphifyGuide(false)" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:18px; line-height:1;">&times;</button>
+                    </div>
+
+                    <!-- Card 1: 3D vs Graphify -->
+                    <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:12px 14px; margin-bottom:12px;">
+                        <div style="font-weight:700; color:#66d9ef; margin-bottom:6px; font-size:13px;">
+                            🔍 1. Два типа графов в системе (В чём разница?)
+                        </div>
+                        <div style="margin-bottom:6px;">
+                            • 🌌 <b>3D Карта (Qdrant)</b>: <i>Векторный статистический ландшафт</i> (32 700+ фрагментов). Каждая точка — текст. Расстояние между точками отражает близость математических эмбеддингов BGE-M3 (семантическая схожесть формулировок).
+                        </div>
+                        <div>
+                            • 🕸️ <b>Сеть Связей (Graphify)</b>: <i>Дискретная онтологическая модель</i>. Извлечена нейросетью <code>gpt-fast</code>. Здесь узлы — это конкретные инженерные концепты (ГОСТы, узлы затвора, дефекты), а стрелки — строгие причинно-следственные связи.
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Arrow Direction Semantics -->
+                    <div style="background:rgba(174,129,255,0.08); border:1px solid rgba(174,129,255,0.35); border-radius:8px; padding:12px 14px; margin-bottom:12px;">
+                        <div style="font-weight:700; color:#ae81ff; margin-bottom:6px; font-size:13px; display:flex; align-items:center; gap:6px;">
+                            ➡️ 2. Что означает направление стрелок (Source ➔ Target)
+                        </div>
+                        <div style="margin-bottom:6px;">
+                            Стрелка всегда направлена от <b>источника нормы / сборки / анализа</b> к <b>объекту воздействия</b>:
+                        </div>
+                        <div style="margin-bottom:4px;">
+                            • <b>Стандарт ➔ Деталь/Узел</b>: Стандарт <i>регламентирует</i> параметры изделия (например: <code>ГОСТ 9544-2015 ➔ Затвор DN80</code> — стандарт устанавливает нормы герметичности для данного затвора).
+                        </div>
+                        <div style="margin-bottom:4px;">
+                            • <b>Стандарт ➔ Стандарт</b>: Документ <i>ссылается</i> на другой нормативный акт (например: <code>ГОСТ 28343 ➔ ГОСТ 9544</code> — стандарт на краны ссылается на нормы герметичности).
+                        </div>
+                        <div style="margin-bottom:4px;">
+                            • <b>Спецификация BOM ➔ Деталь</b>: Сборочный узел <i>включает в себя деталь</i> (например: <code>BOM DN80 ➔ Диск / Шток / Корпус</code>).
+                        </div>
+                        <div>
+                            • <b>DFMEA / Акт дефектовки ➔ Деталь</b>: Анализ отказов <i>указывает на проблемный узел</i> (например: <code>Акт дефектовки ➔ Седловое уплотнение PTFE</code>).
+                        </div>
+                    </div>
+
+                    <!-- Card 3: Tabs & Node Naming -->
+                    <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:12px 14px; margin-bottom:12px;">
+                        <div style="font-weight:700; color:#a6e22e; margin-bottom:6px; font-size:13px;">
+                            🏷️ 3. Именование стандартов и узлов
+                        </div>
+                        <div style="margin-bottom:6px;">
+                            Каждый узел снабжён префиксом своего документа, чтобы исключить путаницу:
+                        </div>
+                        <ul style="margin:4px 0 6px 16px; padding:0;">
+                            <li><b>ГОСТы и нормы</b>: <code>ГОСТ 9544-2015 (Нормы герметичности)</code>, <code>ГОСТ 6111-52 (Коническая резьба)</code>, <code>ISO 5211 (Фланцы приводов)</code>.</li>
+                            <li><b>Конструктивные исполнения</b>: <code>[ГОСТ 12815] Исполнение 1 (с соединительным выступом)</code>.</li>
+                            <li><b>Детали по чертежу</b>: <code>[BOM DN80] Седловое уплотнение PTFE (ДПМ.А.302612.010)</code>.</li>
+                            <li><b>Материалы</b>: <code>Материал: Сталь 12Х18Н10Т (нержавеющая)</code>, <code>Сталь 09Г2С (хладостойкая)</code>.</li>
+                        </ul>
+                    <!-- Card 4: Tabs -->
+                    <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:12px 14px; margin-bottom:12px;">
+                        <div style="font-weight:700; color:#a6e22e; margin-bottom:6px; font-size:13px;">
+                            📑 4. Как понимать вкладки графа
+                        </div>
+                        <div style="margin-bottom:8px;">
+                            <b>📑 Онтологии Стандартов:</b>
+                            <ul style="margin:4px 0 0 16px; padding:0;">
+                                <li><b>Узлы (Nodes)</b>: Стандарты (ГОСТ 6111, ISO 5211), компоненты арматуры (диск, шток, седловое уплотнение PTFE), дефекты (протечка, кавитация) и классы герметичности (Класс А по ГОСТ 9544).</li>
+                                <li><b>Связи (Edges)</b>: Инженерные отношения (<i>«регламентирует»</i>, <i>«устраняет дефект»</i>, <i>«содержит требование»</i>).</li>
+                                <li><b>Цвета (Сообщества)</b>: Автоматические кластеры алгоритма Leiden (сгруппированы по взаимосвязанным темам).</li>
+                            </ul>
+                        </div>
+                        <div style="margin-bottom:8px;">
+                            <b>💻 Архитектура Кода RAG:</b>
+                            <ul style="margin:4px 0 0 16px; padding:0;">
+                                <li>203 узла и 298 связей — полная структурная схема исходного кода Python.</li>
+                                <li>Наглядно показывает вызовы между <code>api.py</code>, <code>retriever.py</code>, <code>generator.py</code>, <code>judge.py</code> (NLI-судья) и <code>indexer.py</code>.</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <b>🌳 Дерево Зависимостей:</b>
+                            <ul style="margin:4px 0 0 16px; padding:0;">
+                                <li>Иерархическая D3-структура. Кликните по узлу, чтобы развернуть или скрыть дочерние функции.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Card 5: Auto Sync -->
+                    <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:12px 14px; margin-bottom:12px;">
+                        <div style="font-weight:700; color:#fd971f; margin-bottom:6px; font-size:13px;">
+                            ⚡ 5. Автоматическая синхронизация при добавлении документов
+                        </div>
+                        <div style="margin-bottom:6px;">
+                            • <b>Фоновое авто-обновление</b>: Когда вы загружаете новый ГОСТ, спецификацию или акт через меню слева (PDF, Excel, MD), RAG-сервер запускает инкрементальный анализ на GPU (RTX A6000).
+                        </div>
+                        <div style="margin-bottom:6px;">
+                            • <b>Быстродействие (< 45 сек)</b>: Система извлекает сущности <i>только из нового документа</i> и плавно вшивает их в уже существующий граф, не пересчитывая старые файлы.
+                        </div>
+                        <div style="margin-bottom:6px;">
+                            • <b>Авто-очистка</b>: При удалении файла через Реестр базы знаний его узлы автоматически удаляются.
+                        </div>
+                        <div>
+                            • <b>Кнопка 🔄 «Синхронизировать»</b>: В любой момент принудительно опрашивает сервер и обновляет визуализацию.
+                        </div>
+                    </div>
+
+                    <!-- Card 6: Navigation -->
+                    <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:12px 14px;">
+                        <div style="font-weight:700; color:#e6db74; margin-bottom:6px; font-size:13px;">
+                            🖱️ 6. Управление и горячие клавиши
+                        </div>
+                        <div>• <b>Масштаб (Zoom)</b>: Колесико мыши.</div>
+                        <div>• <b>Перемещение (Pan)</b>: Зажмите левую кнопку мыши на пустом месте и двигайте карту.</div>
+                        <div>• <b>Фокус на концепте</b>: Кликните по узлу — камера приблизится, подсветятся соседи 1-го и 2-го круга, а справа откроется карточка свойств.</div>
+                        <div>• <b>Перетаскивание узлов</b>: Зажмите узел мышью и двигайте — физический движок Force Simulation плавно перестроит сетку.</div>
+                        <div>• <b>Поиск</b>: Поле 🔍 в правом верхнем углу карты позволяет моментально найти любой термин или ГОСТ.</div>
+                        <div>• <b>Закрытие</b>: Клавиша <code>Esc</code> или крестик в углу.</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

@@ -121,6 +121,15 @@ class PDFParser(BaseParser):
                     cleaned_extracted = re.sub(r'[\u4e00-\u9fff\u3400-\u4dbf\u3000-\u303f]+', ' ', extracted).strip()
                     return cleaned_extracted
             except Exception as exc:
+                # Fallback to local fast Tesseract OCR if Vision LLM is unavailable or fails
+                try:
+                    tess_cmd = ["tesseract", png_path, "stdout", "-l", "rus+eng"]
+                    tess_res = subprocess.run(tess_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
+                    tess_text = tess_res.stdout.strip()
+                    if tess_text:
+                        return tess_text
+                except Exception as t_err:
+                    print(f"[OCR WARN] Tesseract fallback also failed on page {page_num}: {t_err}")
                 print(f"[OCR WARN] Vision model '{self.vision_model}' failed on page {page_num}: {exc}")
                 return ""
 
@@ -159,7 +168,7 @@ class PDFParser(BaseParser):
                     "total_pages": total_pages,
                     "doc_type": doc_type,
                     "format": "pdf",
-                    "verification_link": f"http://localhost:8000/api/documents/{filename}#page={page_idx}"
+                    "verification_link": f"http://192.168.152.38:8000/api/documents/{filename}#page={page_idx}"
                 }
 
                 chunks.append(DocumentChunk(text=cleaned, metadata=metadata))
