@@ -1,4 +1,4 @@
-﻿"""
+"""
 Asynchronous RAGAS Background Evaluator for GASlight-Me RAG.
 Performs non-blocking evaluations of generation quality and retrieval accuracy:
 1. Faithfulness (Groundedness / Hallucination Detection via Statement Decomposition)
@@ -155,9 +155,9 @@ class RagasBackgroundEvaluator:
                 messages=messages,
                 model=model,
                 temperature=0.0,
-                max_tokens=1024,
+                max_tokens=4096,  # Increased from 1024 to prevent cut-offs, especially for Cyrillic tokens
                 response_format={"type": "json_object"},
-                timeout=45
+                timeout=60    # Increased timeout slightly for larger generation
             )
             raw_content = res["choices"][0]["message"]["content"]
             # Clean possible markdown wrapping
@@ -168,7 +168,14 @@ class RagasBackgroundEvaluator:
                 cleaned = cleaned[3:]
             if cleaned.endswith("```"):
                 cleaned = cleaned[:-3]
-            return json.loads(cleaned.strip())
+            
+            cleaned = cleaned.strip()
+            
+            # Additional safety for unterminated JSON strings
+            if not cleaned.endswith("}") and not cleaned.endswith("]"):
+                cleaned += '"}]}' # Attempt primitive closure if heavily truncated
+                
+            return json.loads(cleaned)
         except Exception as e:
             logger.warning(f"JSON LLM eval call failed: {e}")
             return None
