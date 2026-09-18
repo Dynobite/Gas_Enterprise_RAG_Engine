@@ -1,4 +1,4 @@
-﻿# 🪔 GASlight-Me: Enterprise On-Premise RAG for Engineering Standards
+# 🪔 GASlight-Me: Enterprise On-Premise RAG for Engineering Standards
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.109-009688.svg)](https://fastapi.tiangolo.com)
@@ -48,7 +48,7 @@
 <br/>
 
 ### 3. Real-Time Hallucination Detection & Claim Auditing
-<img src="screenshots/Снимок_3.PNG" alt="Hallucination Detection Warning Badge" width="95%" />
+<img src="screenshots/Снимок_8.PNG" alt="Hallucination Detection Warning Badge" width="95%" />
 <p><em>Figure 3: Autonomous LLM-Judge Guardrail flagging unverified or extrapolated claims with exact source-level pinpointing before engineering decisions are made.</em></p>
 
 <br/>
