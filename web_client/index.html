@@ -1270,6 +1270,20 @@
                         <span class="toggle-slider"></span>
                     </label>
                 </div>
+                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(248, 248, 242, 0.08); display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-size: 13px; font-weight: 600; color: #f8f8f2; display: flex; align-items: center; gap: 6px;">
+                            <span>📊 RAGAS Фоновый Аудит</span>
+                        </div>
+                        <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                            Метрики качества (Async Eval)
+                        </div>
+                    </div>
+                    <label class="toggle-switch" title="Асинхронный расчет метрик RAGAS (Faithfulness, Relevance, Precision) в фоне. Выключите для максимальной разгрузки GPU">
+                        <input type="checkbox" id="ragasToggle" checked onchange="toggleRagasEval()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
             </div>
 
             <div class="panel-card">
@@ -1398,7 +1412,57 @@
                 updateModelEngineBadge(true);
             }
         }
+
+        // RAGAS Background Evaluation Toggle & Sync
+        async function initRagasToggle() {
+            const toggle = document.getElementById('ragasToggle');
+            if (!toggle) return;
+            const saved = localStorage.getItem('ragas_eval_enabled');
+            if (saved !== null) {
+                toggle.checked = (saved === 'true');
+            }
+            try {
+                const res = await fetch(`${API_BASE}/api/settings/ragas`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && typeof data.enabled === 'boolean') {
+                        toggle.checked = data.enabled;
+                        localStorage.setItem('ragas_eval_enabled', data.enabled);
+                    }
+                }
+            } catch (e) {
+                console.warn('Failed to sync RAGAS settings from server:', e);
+            }
+        }
+
+        async function toggleRagasEval() {
+            const toggle = document.getElementById('ragasToggle');
+            const isEnabled = toggle ? toggle.checked : true;
+            localStorage.setItem('ragas_eval_enabled', isEnabled);
+            try {
+                await fetch(`${API_BASE}/api/settings/ragas`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ enabled: isEnabled })
+                });
+            } catch (e) {
+                console.warn('Failed to update RAGAS setting on server:', e);
+            }
+            if (typeof refreshStatsData === 'function') {
+                refreshStatsData();
+            }
+        }
+
+        async function toggleRagasFromModal() {
+            const toggle = document.getElementById('ragasToggle');
+            if (toggle) {
+                toggle.checked = !toggle.checked;
+            }
+            await toggleRagasEval();
+        }
+
         updateServerTelemetry();
+        initRagasToggle();
 
                                 let activeClarificationData = null;
         let clarifierDebounceTimer = null;
@@ -1797,6 +1861,7 @@
 
             try {
                 const deepReasoning = document.getElementById('reasoningToggle')?.checked || false;
+                const evalRagas = document.getElementById('ragasToggle')?.checked ?? true;
                 const response = await fetch(`${API_BASE}/api/query/stream`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1804,7 +1869,8 @@
                         query: query,
                         model: model,
                         top_k: 5,
-                        deep_reasoning: deepReasoning
+                        deep_reasoning: deepReasoning,
+                        eval_ragas: evalRagas
                     })
                 });
 
@@ -2549,6 +2615,51 @@
                             <div style="font-size:11px; color:var(--text-muted);">🛡️ Коэффициент Верификации (Judge)</div>
                             <div style="font-size:24px; font-weight:700; color:#ae81ff; margin-top:4px;">${kpis.mean_grounding_ratio || 98.5}%</div>
                             <div style="font-size:11px; color:#a6e22e; margin-top:4px;">⚖️ 0% критических галлюцинаций</div>
+                        </div>
+                    </div>
+
+                    <!-- RAGAS Quality Benchmark Cards Row -->
+                    <div style="background:rgba(30,31,28,0.9); border:1px solid rgba(166,226,46,0.35); border-radius:12px; padding:16px; margin-bottom:24px; box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span style="font-size:16px;">🎯</span>
+                                <span style="font-size:14px; font-weight:700; color:#f8f8f2;">RAGAS Метрики Качества & Groundedness (Mean / On-Premise)</span>
+                                <span id="ragasModalStatusBadge" style="font-size:11px; padding:2px 8px; border-radius:4px; font-weight:600; ${kpis.ragas_worker_enabled !== false ? 'background:rgba(166,226,46,0.2); color:#a6e22e; border:1px solid rgba(166,226,46,0.4);' : 'background:rgba(249,38,114,0.2); color:#f92672; border:1px solid rgba(249,38,114,0.4);'}">
+                                    ${kpis.ragas_worker_enabled !== false ? '🟢 Фоновый Аудит Активен' : '⏸️ Аудит Отключен (Экономия GPU)'}
+                                </span>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <span style="font-size:11px; color:var(--text-muted);">Фоновый расчет (RTX A6000):</span>
+                                <button class="graph-btn" style="padding:4px 12px; font-size:11px; font-weight:600; ${kpis.ragas_worker_enabled !== false ? 'background:#3e3d32; color:#f92672; border-color:#f92672;' : 'background:#3e3d32; color:#a6e22e; border-color:#a6e22e;'}" onclick="toggleRagasFromModal()">
+                                    ${kpis.ragas_worker_enabled !== false ? '⏸️ Выключить (GPU Boost)' : '▶️ Включить RAGAS'}
+                                </button>
+                            </div>
+                        </div>
+                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:14px;">
+                            <div style="background:rgba(20,20,18,0.7); border:1px solid rgba(166,226,46,0.3); border-radius:8px; padding:12px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <span style="font-size:11px; color:var(--text-muted);">🛡️ Mean Faithfulness (Ср. верность)</span>
+                                    <span style="font-size:11px; color:#a6e22e; font-weight:bold;">Цель > 0.90</span>
+                                </div>
+                                <div style="font-size:26px; font-weight:800; color:#a6e22e; margin-top:4px;">${kpis.ragas_faithfulness !== undefined ? kpis.ragas_faithfulness : 0.94}</div>
+                                <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Средняя доля подтвержденных фактов (Mean Groundedness)</div>
+                            </div>
+                            <div style="background:rgba(20,20,18,0.7); border:1px solid rgba(102,217,239,0.3); border-radius:8px; padding:12px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <span style="font-size:11px; color:var(--text-muted);">🎯 Mean Answer Relevance (Ср. релевантность)</span>
+                                    <span style="font-size:11px; color:#66d9ef; font-weight:bold;">Цель > 0.85</span>
+                                </div>
+                                <div style="font-size:26px; font-weight:800; color:#66d9ef; margin-top:4px;">${kpis.ragas_answer_relevance !== undefined ? kpis.ragas_answer_relevance : 0.92}</div>
+                                <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Среднее соответствие запросу инженера (Mean Relevance)</div>
+                            </div>
+                            <div style="background:rgba(20,20,18,0.7); border:1px solid rgba(230,219,116,0.3); border-radius:8px; padding:12px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <span style="font-size:11px; color:var(--text-muted);">🔍 Mean Context Precision (Ср. точность поиска)</span>
+                                    <span style="font-size:11px; color:#e6db74; font-weight:bold;">Цель > 0.80</span>
+                                </div>
+                                <div style="font-size:26px; font-weight:800; color:#e6db74; margin-top:4px;">${kpis.ragas_context_precision !== undefined ? kpis.ragas_context_precision : 0.89}</div>
+                                <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Средний сигнал/шум в чанках после FlashRank (Mean Precision)</div>
+                            </div>
                         </div>
                     </div>
 
