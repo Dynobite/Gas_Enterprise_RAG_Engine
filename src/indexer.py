@@ -1,198 +1,69 @@
 """
-Qdrant Vector Indexer Module.
-Initializes embedded Qdrant vector database, generates BGE-M3 embeddings,
-and stores document chunks with rich metadata payloads.
+Qdrant Indexer Module.
+Creates and manages HNSW vector collections in pure-Rust Qdrant daemon.
 """
-
 import os
-import sys
-import json
 import uuid
-from typing import List, Dict, Any, Optional
-
-# Ensure project root is in python path
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
-
-_UPSERT_BATCH_SIZE = 100  # Max points per Qdrant upsert call to avoid memory spikes
-
+from typing import List, Optional
+from qdrant_client import QdrantClient
+from qdrant_client.http import models
+from qdrant_client.http.models import Distance, VectorParams, PointStruct
 from src.embeddings import OllamaEmbeddingClient
+from src.chunker import TextChunk
 
-try:
-    from qdrant_client import QdrantClient
-    from qdrant_client.http.models import Distance, VectorParams, PointStruct
-    HAS_QDRANT = True
-except ImportError:
-    HAS_QDRANT = False
+_UPSERT_BATCH_SIZE = 100
 
-class QdrantVectorIndexer:
+class QdrantIndexer:
+    """Manages document vector indexing in Qdrant Server."""
     def __init__(
         self,
-        db_path: Optional[str] = None,
-        qdrant_url: Optional[str] = None,
-        collection_name: str = "gas_rag_standards",
-        embedding_model: str = "bge-m3",
-        ollama_url: str = "http://localhost:11434",
-    ) -> None:
-        self.db_path = db_path or os.getenv("VECTOR_DB_DIR", os.path.join(project_root, "vector_db"))
-        self.qdrant_url = qdrant_url or os.getenv("QDRANT_URL", "http://localhost:6333")
-        self.collection_name = collection_name
-        self.embed_client = OllamaEmbeddingClient(base_url=ollama_url, model=embedding_model)
-        self.vector_dim = self.embed_client.dimension
-        
-        os.makedirs(self.db_path, exist_ok=True)
-        
-        if HAS_QDRANT:
-            # 1. Attempt connection to standalone Qdrant Daemon (High Performance, No File Locks)
-            connected = False
-            if self.qdrant_url:
-                try:
-                    self.client = QdrantClient(url=self.qdrant_url, check_compatibility=False, timeout=5)
-                    self.client.get_collections()
-                    connected = True
-                    print(f"[QDRANT] Connected to standalone Qdrant Server Daemon at {self.qdrant_url}")
-                except Exception as exc:
-                    print(f"[WARN] Could not connect to Qdrant Server at {self.qdrant_url} ({exc}). Falling back to local mode.")
-            
-            # 2. Fallback to local embedded mode if server unreachable
-            if not connected:
-                self.client = QdrantClient(path=self.db_path)
-                print(f"[QDRANT] Running in local embedded mode (storage: {self.db_path})")
+        host: Optional[str] = None,
+        port: Optional[int] = None,
+        collection_name: Optional[str] = None,
+        vector_dim: int = 1024,
+        embed_client: Optional[OllamaEmbeddingClient] = None
+    ):
+        self.host: str = host or os.getenv("QDRANT_HOST", "localhost")
+        self.port: int = port or int(os.getenv("QDRANT_PORT", "6333"))
+        self.collection_name: str = collection_name or os.getenv("COLLECTION_NAME", "gas_rag_standards")
+        self.vector_dim: int = vector_dim
+        self.embed_client: OllamaEmbeddingClient = embed_client or OllamaEmbeddingClient()
+        self.client: QdrantClient = QdrantClient(host=self.host, port=self.port, timeout=60.0)
 
-            self._ensure_collection()
-        else:
-            self.client = None
-            print("[WARN] qdrant-client not installed. Please install via `pip install qdrant-client`.")
-
-    def _ensure_collection(self) -> None:
-        """Create or verify the Qdrant collection with cosine similarity."""
-        try:
-            collections = [c.name for c in self.client.get_collections().collections]
-            if self.collection_name not in collections:
-                print(f"[QDRANT] Creating collection '{self.collection_name}' (dim={self.vector_dim}, metric=COSINE)...")
-                self.client.create_collection(
-                    collection_name=self.collection_name,
-                    vectors_config=VectorParams(size=self.vector_dim, distance=Distance.COSINE),
-                )
+    def init_collection(self, recreate: bool = False):
+        """Initializes or resets the target Qdrant collection with HNSW index."""
+        collections = [c.name for c in self.client.get_collections().collections]
+        if self.collection_name in collections:
+            if recreate:
+                self.client.delete_collection(self.collection_name)
             else:
-                print(f"[QDRANT] Collection '{self.collection_name}' verified online.")
-        except Exception as e:
-            print(f"[WARN] Could not verify collection '{self.collection_name}': {e}")
+                return
 
-
-    def index_chunks(self, chunks: List[Any], recreate_collection: bool = False) -> int:
-        """Directly compute BGE-M3 embeddings for chunk objects and upsert into Qdrant."""
-        if not HAS_QDRANT or not self.client:
-            print("[ERROR] Cannot index: qdrant-client is not available.")
-            return 0
-
-        total_chunks = len(chunks)
-        print(f"[QDRANT] Indexing {total_chunks} chunk objects into '{self.collection_name}'...")
-
-        points = []
-        for idx, item in enumerate(chunks, start=1):
-            if hasattr(item, "text"):
-                text = item.text
-                metadata = getattr(item, "metadata", {})
-            else:
-                text = item.get("text", "")
-                metadata = item.get("metadata", {})
-
-            embedding = self.embed_client.get_embedding(text)
-            chunk_unique_name = f"{metadata.get('source', '')}_{metadata.get('sheet', '')}_{metadata.get('page', '')}_{idx}"
-            point_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, chunk_unique_name))
-
-            payload = {
-                "text": text,
-                **metadata
-            }
-            points.append(PointStruct(id=point_id, vector=embedding, payload=payload))
-
-        total_upserted = 0
-        for batch_start in range(0, len(points), _UPSERT_BATCH_SIZE):
-            batch = points[batch_start: batch_start + _UPSERT_BATCH_SIZE]
-            self.client.upsert(collection_name=self.collection_name, points=batch)
-            total_upserted += len(batch)
-
-        print(f"[SUCCESS] Successfully indexed {total_upserted} chunks into Qdrant collection '{self.collection_name}'!")
-        return total_upserted
-
-    def index_chunks_file(self, chunks_json_path: str = None) -> int:
-        """Read chunks from chunks.json, compute BGE-M3 embeddings, and upsert into Qdrant."""
-        if not HAS_QDRANT or not self.client:
-            print("[ERROR] Cannot index: qdrant-client is not available.")
-            return 0
-
-        path = chunks_json_path or os.path.join(project_root, "data", "processed", "chunks.json")
-        if not os.path.exists(path):
-            print(f"[ERROR] Chunks file not found: {path}")
-            return 0
-
-        with open(path, "r", encoding="utf-8") as f:
-            chunks_data = json.load(f)
-
-        total_chunks = len(chunks_data)
-        print(f"[QDRANT] Indexing {total_chunks} chunks from '{path}' into '{self.collection_name}'...")
-
-        points = []
-        for idx, item in enumerate(chunks_data, start=1):
-            text = item.get("text", "")
-            metadata = item.get("metadata", {})
-            
-            # Compute embedding
-            embedding = self.embed_client.get_embedding(text)
-            
-            # Create unique point ID
-            point_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, metadata.get("chunk_id", f"chunk_{idx}")))
-            
-            payload = {
-                "text": text,
-                **metadata
-            }
-            
-            points.append(PointStruct(id=point_id, vector=embedding, payload=payload))
-
-            if idx % 10 == 0 or idx == total_chunks:
-                print(f"  [INDEXING] Processed {idx}/{total_chunks} embeddings...")
-
-        # Batch upsert to avoid memory spikes with large datasets
-        total_upserted = 0
-        for batch_start in range(0, len(points), _UPSERT_BATCH_SIZE):
-            batch = points[batch_start: batch_start + _UPSERT_BATCH_SIZE]
-            self.client.upsert(collection_name=self.collection_name, points=batch)
-            total_upserted += len(batch)
-            print(f"  [UPSERT] Committed {total_upserted}/{len(points)} points...")
-
-        print(f"[SUCCESS] Successfully upserted {total_upserted} points into Qdrant collection '{self.collection_name}'!")
-        return total_upserted
-
-    def search(self, query: str, top_k: int = 5) -> List[Dict[str, Any]]:
-        """Perform semantic search on Qdrant collection."""
-        if not HAS_QDRANT or not self.client:
-            return []
-
-        query_vector = self.embed_client.get_embedding(query)
-        
-        # Qdrant client query points
-        search_result = self.client.query_points(
+        self.client.create_collection(
             collection_name=self.collection_name,
-            query=query_vector,
-            limit=top_k
-        ).points
+            vectors_config=VectorParams(size=self.vector_dim, distance=Distance.COSINE),
+            hnsw_config=models.HnswConfigDiff(m=16, ef_construct=100)
+        )
 
-        results = []
-        for scored_point in search_result:
-            meta = {k: v for k, v in scored_point.payload.items() if k != "text"}
-            results.append({
-                "score": round(float(scored_point.score), 4),
-                "text": scored_point.payload.get("text", ""),
-                "metadata": meta,
-                **meta
-            })
+    def index_chunks(self, chunks: List[TextChunk], batch_size: int = _UPSERT_BATCH_SIZE) -> int:
+        """Embeds and uploads text chunks to Qdrant in batches."""
+        if not chunks:
+            return 0
 
-        return results
+        self.init_collection(recreate=False)
+        total_indexed = 0
 
-if __name__ == "__main__":
-    indexer = QdrantVectorIndexer()
-    indexer.index_chunks_file()
+        for i in range(0, len(chunks), batch_size):
+            batch = chunks[i: i + batch_size]
+            points: List[PointStruct] = []
+            for idx, c in enumerate(batch):
+                emb = self.embed_client.get_embedding(c.text)
+                chunk_id = c.metadata.get("chunk_id", str(uuid.uuid4()))
+                point_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, str(chunk_id)))
+                payload = {"text": c.text, **c.metadata}
+                points.append(PointStruct(id=point_id, vector=emb, payload=payload))
+
+            self.client.upsert(collection_name=self.collection_name, points=points)
+            total_indexed += len(points)
+
+        return total_indexed

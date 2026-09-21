@@ -1,247 +1,129 @@
 """
-2-Stage Retrieval & Reranking Module for GASlight-Me RAG.
-Stage 1: Fast Qdrant HNSW vector search over 32k+ points via BGE-M3 (3 ms).
-Stage 2: Cross-Encoder Reranker deep attention scoring via FlashRank MiniLM (15-20 ms).
-Feature: Small-to-Big Parent Page Hydration (Zero-Latency Full Page Context Assembly).
+Two-Stage Hybrid Retriever with Small-to-Big Parent Page Hydration.
 """
-
 import os
-import sys
+import re
 from typing import List, Dict, Any, Optional, Union
-
-# Ensure project root is in python path
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
-
-from src.indexer import QdrantVectorIndexer
-from src.reranker import GasRagReranker
+from qdrant_client import QdrantClient
+from qdrant_client.http.models import Filter, FieldCondition, MatchValue
+from src.embeddings import OllamaEmbeddingClient
+from src.reranker import FlashRankReranker
 
 class GasRagRetriever:
+    """Hybrid Retriever combining Qdrant HNSW vector search, FlashRank, and PageIndex Hydration."""
     def __init__(
         self,
-        db_path: Optional[str] = None,
-        collection_name: str = "gas_rag_standards",
-        ollama_url: str = "http://localhost:11434",
-        embedding_model: str = "bge-m3",
-        use_reranker: bool = True,
-        enable_parent_page_hydration: bool = True,
-        enable_page_coalescing: bool = True,
-        qdrant_url: Optional[str] = None,
-    ) -> None:
-        self.db_path = db_path or os.path.join(project_root, "vector_db")
-        self.collection_name = collection_name
-        self.indexer = QdrantVectorIndexer(
-            db_path=self.db_path,
-            qdrant_url=qdrant_url,
-            collection_name=collection_name,
-            embedding_model=embedding_model,
-            ollama_url=ollama_url
-        )
-        self.reranker = GasRagReranker(enabled=use_reranker)
-        self.enable_parent_page_hydration = enable_parent_page_hydration
-        self.enable_page_coalescing = enable_page_coalescing
+        host: Optional[str] = None,
+        port: Optional[int] = None,
+        collection_name: Optional[str] = None,
+        embed_client: Optional[OllamaEmbeddingClient] = None,
+        reranker: Optional[FlashRankReranker] = None,
+        enable_parent_page_hydration: bool = True
+    ):
+        self.host: str = host or os.getenv("QDRANT_HOST", "localhost")
+        self.port: int = port or int(os.getenv("QDRANT_PORT", "6333"))
+        self.collection_name: str = collection_name or os.getenv("COLLECTION_NAME", "gas_rag_standards")
+        self.embed_client: OllamaEmbeddingClient = embed_client or OllamaEmbeddingClient()
+        self.reranker: FlashRankReranker = reranker or FlashRankReranker()
+        self.client: QdrantClient = QdrantClient(host=self.host, port=self.port, timeout=30.0)
+        self.enable_parent_page_hydration: bool = enable_parent_page_hydration
 
-    def hydrate_parent_page(self, source: str, page: int) -> Optional[str]:
-        """
-        Ultra-fast in-memory lookup in Qdrant to assemble the 100% full parent page text
-        (including headers, footnotes, units, and tables) for a matched snippet.
-        """
+    def hydrate_parent_page(self, source: str, page: Optional[int]) -> Optional[str]:
+        """Reconstructs the 100% full parent page text from Qdrant in < 1ms."""
+        if not source or page is None:
+            return None
         try:
-            from qdrant_client.http import models as qmodels
-            res, _ = self.indexer.client.scroll(
+            scroll_filter = Filter(
+                must=[
+                    FieldCondition(key="source", match=MatchValue(value=source)),
+                    FieldCondition(key="page", match=MatchValue(value=page))
+                ]
+            )
+            points, _ = self.client.scroll(
                 collection_name=self.collection_name,
-                scroll_filter=qmodels.Filter(
-                    must=[
-                        qmodels.FieldCondition(key="source", match=qmodels.MatchValue(value=source)),
-                        qmodels.FieldCondition(key="page", match=qmodels.MatchValue(value=page)),
-                    ]
-                ),
-                limit=15,
+                scroll_filter=scroll_filter,
+                limit=64,
                 with_payload=True,
                 with_vectors=False
             )
-            if not res:
+            if not points:
                 return None
 
-            # Collect and sort text fragments from this page
-            page_texts = []
-            for p in res:
-                t = p.payload.get("text", "").strip()
-                if t and not any(t in existing for existing in page_texts):
-                    page_texts.append(t)
-
-            if page_texts:
-                return "\n\n".join(page_texts)
-        except Exception as e:
-            # Non-blocking fallback
+            points.sort(key=lambda p: (p.payload or {}).get("chunk_index", 0))
+            full_page_text = "\n\n".join(
+                [(p.payload.get("text", "")).strip() for p in points if p.payload and p.payload.get("text")]
+            )
+            return full_page_text if full_page_text.strip() else None
+        except Exception:
             return None
-        return None
 
-    def coalesce_and_hydrate_pages(
-        self,
-        chunks: List[Dict[str, Any]],
-        max_total_chars: int = 12000
-    ) -> List[Dict[str, Any]]:
-        """
-        Small-to-Big Parent Page Coalescing & Hydration:
-        1. Groups chunks by (source, page)
-        2. Hydrates full parent page context for PDF standards
-        3. Protects atomic Excel rows
-        4. Enforces context token budget guard
-        """
-        if not chunks:
-            return []
+    def coalesce_and_hydrate_pages(self, ranked_chunks: List[Dict[str, Any]], max_chars_budget: int = 12000) -> List[Dict[str, Any]]:
+        """Assembles parent pages for winning chunks within safety context limits."""
+        seen_pages = set()
+        hydrated_chunks: List[Dict[str, Any]] = []
+        total_chars = 0
 
-        page_groups: Dict[str, Dict[str, Any]] = {}
-        ordered_keys: List[str] = []
+        for chunk in ranked_chunks:
+            source = chunk.get("source", "")
+            page = chunk.get("page")
+            page_key = (source, page)
 
-        for c in chunks:
-            src = c.get("source", "unknown")
-            page = c.get("page", 1)
-            fmt = c.get("format", "")
-
-            # Excel tabular rows are already atomic micro-chunks — preserve as-is
-            if fmt == "excel" or "dfmea" in src.lower() or "bom" in src.lower():
-                key = f"{src}_{page}_{len(ordered_keys)}"
-                page_groups[key] = dict(c)
-                ordered_keys.append(key)
+            if page is not None and page_key in seen_pages:
                 continue
 
-            # Standard PDF/DOCX page key
-            key = f"{src}__p{page}"
-            text = c.get("text", "").strip()
+            if page is not None and self.enable_parent_page_hydration:
+                parent_text = self.hydrate_parent_page(source, page)
+                if parent_text:
+                    seen_pages.add(page_key)
+                    if total_chars + len(parent_text) <= max_chars_budget:
+                        c_copy = chunk.copy()
+                        c_copy["text"] = parent_text
+                        c_copy["is_hydrated_parent_page"] = True
+                        hydrated_chunks.append(c_copy)
+                        total_chars += len(parent_text)
+                        continue
 
-            if key not in page_groups:
-                page_groups[key] = dict(c)
-                page_groups[key]["text_parts"] = [text]
-                ordered_keys.append(key)
-            else:
-                existing_parts = page_groups[key]["text_parts"]
-                if not any(text in p or p in text for p in existing_parts):
-                    existing_parts.append(text)
-                if c.get("score", 0) > page_groups[key].get("score", 0):
-                    page_groups[key]["score"] = c.get("score", 0)
-
-        # Assemble final results with Parent Page Hydration
-        coalesced_results: List[Dict[str, Any]] = []
-        current_chars = 0
-
-        for k in ordered_keys:
-            item = page_groups[k]
-            src = item.get("source", "")
-            page = item.get("page", 1)
-            fmt = item.get("format", "")
-
-            if "text_parts" in item:
-                # Merge existing parts
-                merged_text = "\n\n".join(item["text_parts"])
-                
-                # If enabled, fetch full parent page context from Qdrant
-                if self.enable_parent_page_hydration and fmt != "excel":
-                    full_parent = self.hydrate_parent_page(src, page)
-                    if full_parent and len(full_parent) >= len(merged_text):
-                        merged_text = full_parent
-
-                item["text"] = merged_text
-                item.pop("text_parts", None)
-
-            txt_len = len(item.get("text", ""))
-            if current_chars + txt_len > max_total_chars and coalesced_results:
+            hydrated_chunks.append(chunk)
+            total_chars += len(chunk.get("text", ""))
+            if total_chars >= max_chars_budget:
                 break
 
-            coalesced_results.append(item)
-            current_chars += txt_len
-
-        return coalesced_results
+        return hydrated_chunks
 
     def retrieve(
         self,
         query: Union[str, List[str]],
         top_k: int = 5,
-        candidate_k: int = 50,
-        score_threshold: float = 0.30,
-        use_reranker: bool = True,
-        pre_fetched_candidates: Optional[List[Dict[str, Any]]] = None,
-        skip_search_queries: Optional[List[str]] = None,
+        candidate_limit: int = 40,
+        enable_rerank: bool = True
     ) -> List[Dict[str, Any]]:
-        """
-        2-Stage Dual-Search retrieval with Small-to-Big Parent Page Hydration:
-        1. Multi-query vector search across 32k+ points
-        2. Merge & deduplicate candidate pool with keyword boosting
-        3. Cross-Encoder deep attention reranking on micro-chunks
-        4. Small-to-Big Parent Page Hydration on winning chunks
-        """
-        queries: List[str] = [query] if isinstance(query, str) else query
-        primary_query = queries[0] if queries else ""
-        if not primary_query:
-            return []
-        
-        skip_queries = skip_search_queries or []
-
-        # Stage 1: Vector search across all queries in list
-        pool_size = max(candidate_k, top_k * 5)
-        seen_texts: Dict[str, Dict[str, Any]] = {}
-
-        if pre_fetched_candidates:
-            for cand in pre_fetched_candidates:
-                txt = cand.get("text", "").strip()
-                if txt:
-                    seen_texts[txt] = cand
-
-        for q in queries:
-            if not q or not q.strip() or q in skip_queries:
-                continue
-            raw_candidates = self.indexer.search(query=q.strip(), top_k=pool_size)
-            for cand in raw_candidates:
-                txt = cand.get("text", "").strip()
-                if not txt:
-                    continue
-                if txt not in seen_texts or cand.get("score", 0) > seen_texts[txt].get("score", 0):
-                    seen_texts[txt] = cand
-
-        all_candidates = list(seen_texts.values())
-        if not all_candidates:
+        """Executes candidate vector scan, FlashRank cross-encoding, and Parent Page Hydration."""
+        queries = [query] if isinstance(query, str) else [q for q in query if q.strip()]
+        if not queries:
             return []
 
-        # Boost exact source / drawing / document keyword matches in candidate pool
-        q_lower = primary_query.lower()
-        for cand in all_candidates:
-            src_lower = cand.get("source", "").lower()
-            text_lower = cand.get("text", "").lower()
+        primary_query = queries[0]
+        candidates_by_id: Dict[str, Dict[str, Any]] = {}
 
-            # Direct DFMEA / BOM boost
-            if "dfmea" in q_lower and "dfmea" in src_lower:
-                cand["score"] = cand.get("score", 0) + 0.40
-            elif "bom" in q_lower and "bom" in src_lower:
-                cand["score"] = cand.get("score", 0) + 0.40
+        for q_text in queries:
+            emb = self.embed_client.get_embedding(q_text)
+            hits = self.client.search(
+                collection_name=self.collection_name,
+                query_vector=emb,
+                limit=candidate_limit
+            )
+            for hit in hits:
+                doc = {"id": hit.id, "score": hit.score, **hit.payload}
+                if hit.id not in candidates_by_id or hit.score > candidates_by_id[hit.id]["score"]:
+                    candidates_by_id[hit.id] = doc
 
-            # Universal standard & drawing code matching (e.g., 212-2008, 2-4.1-212, ДПМА.731673, ГОСТ 6111)
-            for part in q_lower.split():
-                clean_part = part.strip(",.()[]{}:;\"'«»")
-                if len(clean_part) >= 4:
-                    if clean_part in src_lower:
-                        cand["score"] = cand.get("score", 0) + 0.45
-                    elif clean_part in text_lower and any(kw in clean_part for kw in ["дпма", "гост", "gost", "сто", "rd", "рду", "212", "2-4"]):
-                        cand["score"] = cand.get("score", 0) + 0.35
-
-        # Sort by boosted vector score
-        all_candidates.sort(key=lambda x: x.get("score", 0), reverse=True)
-
-        # Filter low-confidence vector noise
-        filtered_candidates = [r for r in all_candidates if r.get("score", 0) >= score_threshold]
-        candidates = filtered_candidates if filtered_candidates else all_candidates[:15]
-
-        # Stage 2: Cross-Encoder Reranking on precise micro-chunks
-        if use_reranker and self.reranker.enabled:
-            results = self.reranker.rerank(primary_query, candidates, top_n=top_k * 2 if self.enable_page_coalescing else top_k)
+        candidate_list = list(candidates_by_id.values())
+        if enable_rerank:
+            ranked = self.reranker.rerank(query=primary_query, candidates=candidate_list, top_k=top_k)
         else:
-            results = candidates[:top_k * 2 if self.enable_page_coalescing else top_k]
+            candidate_list.sort(key=lambda x: x.get("score", 0), reverse=True)
+            ranked = candidate_list[:top_k]
 
-        # Stage 3: Small-to-Big Parent Page Coalescing & Hydration
-        if self.enable_page_coalescing or self.enable_parent_page_hydration:
-            final_results = self.coalesce_and_hydrate_pages(results, max_total_chars=12000)[:top_k]
-        else:
-            final_results = results[:top_k]
-
-        return final_results
+        if self.enable_parent_page_hydration:
+            return self.coalesce_and_hydrate_pages(ranked)
+        return ranked
