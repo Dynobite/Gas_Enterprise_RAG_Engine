@@ -16,7 +16,7 @@
 * 🧠 **Small-to-Big Parent Page Hydration (PageIndex Pattern)**: Searches micro-chunks via HNSW + Cross-Encoder for pinpoint accuracy, then dynamically hydrates the **100% full parent page text** (headers, footnotes, units, tolerances) in `< 1 ms` before passing to the LLM generator.
 * ⚡ **High-Speed Semantic Caching Layer (In-Memory Vector Index + Bounded Persistence & FAQ Pre-Seeding)**:
   - Intercepts repeated or semantically equivalent engineering queries ($\ge 0.93$ cosine similarity on `bge-m3` embeddings).
-  - **Frequency-Aware Weighted Eviction (LFU/LRU Hybrid):** Retains high-frequency queries using logarithmic hit weighting ($S = \text{last\_accessed} + 86400 \cdot \ln(1 + \text{hit\_count})$) and guarantees zero-eviction immunity for pinned entries.
+  - **Frequency-Aware Weighted Eviction (LFU/LRU Hybrid):** Retains high-frequency queries using logarithmic hit weighting (`S = last_accessed + 86400 * ln(1 + hits)`) and guarantees zero-eviction immunity for pinned entries.
   - **Golden FAQ Pre-Seeding:** Pre-warms curated standard regulatory questions (`data/curated_faq_cache.json`) on server boot for instant sub-50ms responses from Day 1.
   - **Bounded On-Disk Persistence:** Atomically serializes entries to `data/semantic_cache.json` with an explicit $120\text{ MB}$ memory ceiling ($10\,000\text{ entries}$, $<0.1\%$ server RAM) eliminating cold starts on reboot.
   - Delivers verified responses in **< 50 ms** (~$175\times$ faster than cold generation) with **0% GPU load**.
@@ -168,8 +168,12 @@ flowchart LR
 ### 1. Top-Rating & Frequency-Aware Eviction (LFU/LRU Hybrid)
 * **Problem with standard LRU:** A sudden burst of rare, one-off engineering queries could prematurely evict high-value, frequently asked questions (e.g., *ГОСТ 6111-52*, *СТО Газпром 2-2.3-1122-2017*).
 * **Weighted Eviction Scoring:** Each cache entry receives a mathematical priority score:
-  $$S = \text{last\_accessed} + 86\,400.0 \times \ln(1 + \text{hit\_count})$$
-  High-frequency queries are exponentially shielded from pruning. Pinned golden FAQ items receive $S = \infty$ and are permanently immune to cache eviction.
+
+  ```math
+  S = t_{\text{access}} + 86400 \times \ln(1 + N_{\text{hits}})
+  ```
+
+  High-frequency queries are exponentially shielded from pruning. Pinned golden FAQ items receive `S = ∞` and are permanently immune to cache eviction.
 
 ### 2. Drive Saving & Cold-Start Elimination (Bounded Persistence)
 * **Zero Cold-Start:** Cache state is atomically serialized to `data/semantic_cache.json` on every verified store. On server restart, cached embeddings and full verified responses are reloaded into RAM in `< 5 ms`.
