@@ -14,6 +14,10 @@
 ## 🌟 Key Architecture Highlights
 
 * 🧠 **Small-to-Big Parent Page Hydration (PageIndex Pattern)**: Searches micro-chunks via HNSW + Cross-Encoder for pinpoint accuracy, then dynamically hydrates the **100% full parent page text** (headers, footnotes, units, tolerances) in `< 1 ms` before passing to the LLM generator.
+* ⚡ **High-Speed Semantic Caching Layer (In-Memory Vector Cosine Similarity / Redis Protocol)**:
+  - Intercepts repeated or semantically equivalent engineering queries ($\ge 0.93$ cosine similarity on `bge-m3` embeddings).
+  - Delivers verified responses in **< 50 ms** (~$380\times$ faster than cold generation) with **0% GPU load**.
+  - Emits real-time `event: cache_hit` SSE badges with dedicated cache management endpoints (`POST /api/cache/clear`, `GET /api/stats`).
 * ⚡ **Dual-Engine High-Throughput Inference (vLLM & Ollama)**:
   - **High-Speed Primary Engine:** `vLLM` serving `Qwen 3.6 35B` with PagedAttention and Continuous Batching delivering **~104+ tok/s** and TTFT < 1.0s on NVIDIA RTX A6000 (48 GB).
   - **Resilient Fallback Engine:** `Ollama` running secondary models (`gpt-oss:20b`, `llama3.2-vision:11b`).
@@ -95,23 +99,28 @@ flowchart TD
 
     subgraph ONLINE ["🔍 Multi-Stage Online Retrieval & Verification Pipeline"]
         direction TB
-        UQ["❓ Engineer Query / Draft Text<br/><b>[Raw User Input]</b>"] --> COPILOT["✨ Stage 0: Pre-Retrieval Co-Pilot<br/><b>[Fast HNSW Pre-Search + Slot Analyzer]</b>"]
+        UQ["❓ Engineer Query / Draft Text<br/><b>[Raw User Input]</b>"] --> CACHE{"⚡ Stage 0: Semantic Vector Cache<br/><b>[Cosine Similarity &ge; 0.93 &middot; <50ms]</b>"}
         
-        COPILOT --> REWRITE["🎯 Stage 1: Dual-Search Query Rewriter<br/><b>[Terminology & Standard Code Expander]</b>"]
+        CACHE -- "Hit (Verified Answer)" --> UI["🎨 Stage 7: Interactive Web Client<br/><b>[Instant SSE Stream + Citations]</b>"]
         
-        REWRITE --> DUAL["🔍 Stage 2: Dual Candidate Vector Search<br/><b>[Qdrant HNSW Top-50 K-NN Search in ~3ms]</b>"]
+        CACHE -- "Miss" --> COPILOT["✨ Stage 1: Pre-Retrieval Co-Pilot<br/><b>[Fast HNSW Pre-Search + Slot Analyzer]</b>"]
+        
+        COPILOT --> REWRITE["🎯 Stage 2: Dual-Search Query Rewriter<br/><b>[Terminology & Standard Code Expander]</b>"]
+        
+        REWRITE --> DUAL["🔍 Stage 3: Dual Candidate Vector Search<br/><b>[Qdrant HNSW Top-50 K-NN Search in ~3ms]</b>"]
         QDR -.->|"K-NN Scan"| DUAL
         
-        DUAL --> RERANK["⚡ Stage 3: Cross-Encoder Re-scoring<br/><b>[FlashRank ms-marco-MiniLM · ~18ms]</b>"]
+        DUAL --> RERANK["⚡ Stage 4: Cross-Encoder Re-scoring<br/><b>[FlashRank ms-marco-MiniLM · ~18ms]</b>"]
         
-        RERANK --> HYDRATE["📖 Stage 4: Small-to-Big Parent Page Hydration<br/><b>[Qdrant In-Memory Key Scroll <1ms]</b>"]
+        RERANK --> HYDRATE["📖 Stage 5: Small-to-Big Parent Page Hydration<br/><b>[Qdrant In-Memory Key Scroll <1ms]</b>"]
         QDR -.->|"Key Scroll"| HYDRATE
         
-        HYDRATE --> GEN["🧠 Stage 5: Generation & Token Streaming<br/><b>[vLLM: Qwen 3.6 35B · PagedAttention 104 tok/s]</b>"]
+        HYDRATE --> GEN["🧠 Stage 6: Generation & Token Streaming<br/><b>[vLLM: Qwen 3.6 35B · PagedAttention 104 tok/s]</b>"]
         
-        GEN --> JUDGE["⚖️ Stage 6: LLM-as-a-Judge Fact Guardrail<br/><b>[Zero-Temp NLI Entailment Auditor]</b>"]
+        GEN --> JUDGE["⚖️ Stage 7: LLM-as-a-Judge Fact Guardrail<br/><b>[Zero-Temp NLI Entailment Auditor]</b>"]
         
-        JUDGE --> UI["🎨 Stage 7: Interactive Web Client<br/><b>[Real-Time SSE Stream + Citations]</b>"]
+        JUDGE --> UI
+        JUDGE -.->|"Cache Verified Answer"| CACHE
         
         JUDGE -.->|"Async Event"| RAGAS["📊 Asynchronous RAGAS Evaluator<br/><b>[Mean Faithfulness, Relevance, Precision]</b>"]
         RAGAS -.->|"Persist"| DB[("🗄️ SQLite Analytics DB")]
@@ -124,6 +133,7 @@ flowchart TD
 
 | Component | Technology | Latency | Deterministic? |
 | :--- | :--- | :---: | :---: |
+| **Semantic Cache (Hot Search)** | In-Memory Vector Cosine Similarity / Redis Protocol | **< 50 ms** | ✅ Yes |
 | **Vector Search** | Pure-Rust Qdrant (HNSW Cosine) | **~3 ms** | ✅ Yes |
 | **Neural Reranking** | FlashRank (`ms-marco-MiniLM-L-12-v2`) | **~18 ms** | ✅ Yes |
 | **Parent Page Hydration** | Qdrant In-Memory Key Scroll | **< 1 ms** | ✅ Yes |
