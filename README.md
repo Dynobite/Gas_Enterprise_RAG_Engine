@@ -32,7 +32,11 @@
 * ⚡ **Two-Stage Hybrid Retrieval**:
   1. **Stage 1 (Qdrant HNSW)**: Dense multilingual semantic search (`bge-m3`, 1024 dimensions) in **~3 ms** across thousands of document points.
   2. **Stage 2 (FlashRank)**: Cross-encoder deep attention re-scoring (`ms-marco-MiniLM-L-12-v2`) in **~18 ms**.
-* ⚖️ **LLM-as-a-Judge Fact Auditor**: Autonomous NLI Premise-Hypothesis entailment guardrail computing Grounding Ratio (%) in real time with explicit unsupported claim detection.
+* ⚖️ **LLM-as-a-Judge Fact Auditor & Closed-Loop Self-Correction (Self-Reflective RAG)**:
+  - Real-time NLI Premise-Hypothesis entailment auditor calculating Grounding Ratio (%) and detecting unverified claims.
+  - **Closed-Loop Self-Correction**: If hallucinations are caught, critique feedback routes back to the generator at low temperature (`0.05`) with verbatim context extraction, streaming corrected answers via `event: correction`.
+  - Displays the verified badge: `🛡️ Автоматически выверено и подтверждено первоисточником (LLM-Judge)`.
+  - **Cross-Standard Normative Bridging & Refusal Immunity**: Seamlessly bridges generic standard queries (ГОСТ) to industry standards (СТ ЦКБА, СТО Газпром) and prevents non-informative refusal answers from polluting the semantic cache.
 * 🌐 **Universal In-Browser Document Previewer & Stage 1 MD Inspector**: Native rendering for `.xlsx` (interactive sheets & search), `.docx` (typography), `.pdf` (`#page=N`), and structured Stage 1 `.md` quality verification with zero downloads.
 * 📈 **Client IP UX Analytics & Telemetry**: Embedded SQLite store logging real workstation client IPs, query latencies, and activity leaderboards.
 
@@ -120,10 +124,13 @@ flowchart TD
         
         HYDRATE --> GEN["🧠 Stage 6: Generation & Token Streaming<br/><b>[vLLM: Qwen 3.6 35B · PagedAttention 104 tok/s]</b>"]
         
-        GEN --> JUDGE["⚖️ Stage 7: LLM-as-a-Judge Fact Guardrail<br/><b>[Zero-Temp NLI Entailment Auditor]</b>"]
+        GEN --> JUDGE{"⚖️ Stage 7: LLM Fact Guardrail<br/><b>[Zero-Temp NLI Entailment Auditor]</b>"}
         
-        JUDGE --> UI
-        JUDGE -.->|"Cache Verified Answer"| CACHE
+        JUDGE -- "Ungrounded Claims (Hallucination)" --> CORR["🔄 Stage 7b: Closed-Loop Self-Correction<br/><b>[Critique-Guided Re-synthesis · temp=0.05]</b>"]
+        CORR --> UI
+        
+        JUDGE -- "Verified & Grounded" --> UI
+        JUDGE -.->|"Cache Verified Answer (Non-Refusal)"| CACHE
         
         JUDGE -.->|"Async Event"| RAGAS["📊 Asynchronous RAGAS Evaluator<br/><b>[Mean Faithfulness, Relevance, Precision]</b>"]
         RAGAS -.->|"Persist"| DB[("🗄️ SQLite Analytics DB")]
@@ -142,6 +149,7 @@ flowchart TD
 | **Parent Page Hydration** | Qdrant In-Memory Key Scroll | **< 1 ms** | ✅ Yes |
 | **LLM Generation** | Qwen 3.6 35B via vLLM (RTX A6000) | **~104 tok/s (SSE)** | ❌ (temp=0.1) |
 | **Fact-Check Audit** | LLM-as-a-Judge (NLI Entailment) | **~350 ms** | ✅ (temp=0.0) |
+| **Self-Correction Pass (Conditional)** | LLM Critique Rewriter (temp=0.05) | **~1.5s – 2.5s** | ❌ (temp=0.05) |
 | **RAGAS Background Eval** | Asynchronous Thread Worker Queue | **Non-blocking (0 ms user delay)** | ✅ Yes |
 | **UX Telemetry Store** | Embedded SQLite3 (`data/analytics.db`) | **< 0.1 ms** | ✅ Yes |
 
