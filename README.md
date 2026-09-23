@@ -38,7 +38,8 @@
   - Displays the verified badge: `🛡️ Автоматически выверено и подтверждено первоисточником (LLM-Judge)`.
   - **Cross-Standard Normative Bridging & Refusal Immunity**: Seamlessly bridges generic standard queries (ГОСТ) to industry standards (СТ ЦКБА, СТО Газпром) and prevents non-informative refusal answers from polluting the semantic cache.
 * 🌐 **Universal In-Browser Document Previewer & Stage 1 MD Inspector**: Native rendering for `.xlsx` (interactive sheets & search), `.docx` (typography), `.pdf` (`#page=N`), and structured Stage 1 `.md` quality verification with zero downloads.
-* 📈 **Client IP UX Analytics & Telemetry**: Embedded SQLite store logging real workstation client IPs, query latencies, and activity leaderboards.
+* 📁 **Drag-and-Drop Batch Ingestion**: Upload entire folders of complex, multi-modal documents at once right from the Web UI.
+* 🔒 **Role-Based Telemetry & Document Lifecycle Management**: Granular permissions (Guests vs Authenticated Departments) governing secure document deletion, dynamic client IP resolution, query leaderboards, and dashboard statistics tracking.
 
 ---
 
@@ -58,9 +59,9 @@
 
 <br/>
 
-### 3. Transparent Chain-of-Thought & Deep Reasoning Analysis
-<img src="screenshots/Снимок_8.PNG" alt="Deep Reasoning Block and Tabular Response" width="95%" />
-<p><em>Figure 3: Advanced reasoning engine mitigating hallucinations by explicitly declaring missing data, displaying transparent Chain-of-Thought analysis, and structuring factual constraints in a tabular format.</em></p>
+### 3. Real-Time Hallucination Detection & Claim Auditing
+<img src="screenshots/Снимок_3.PNG" alt="Hallucination Detection Warning Badge" width="95%" />
+<p><em>Figure 3: Autonomous LLM-Judge Guardrail flagging unverified or extrapolated claims with exact source-level pinpointing before engineering decisions are made.</em></p>
 
 <br/>
 
